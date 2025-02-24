@@ -1,6 +1,6 @@
-## DW Page (dw-chat)
+## DW Chat (dw-chat)
 
-一个接入DeepSeek的纯前端极简聊天页面
+一个接入 DeepSeek-V3 大模型的纯前端极简聊天页面
 
 
 
@@ -30,7 +30,7 @@ npm install @ant-design/x --save
 ```
 
 
-## 本项目用到的库
+### 本项目用到的库
 
 安装 Ant Design icon图标
 ```shell

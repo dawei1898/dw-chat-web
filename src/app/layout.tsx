@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import "./globals.css";
 import {XProvider} from "@ant-design/x";
 

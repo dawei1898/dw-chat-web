@@ -20,6 +20,7 @@ import {
     ShareAltOutlined,
     SmileOutlined,
 } from "@ant-design/icons";
+import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import DeepSeekIcon from "@/app/chat/deep-seek-icon";
 import OpenAI from "openai";
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";

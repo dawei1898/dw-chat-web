@@ -78,3 +78,12 @@ import '@ant-design/v5-patch-for-react-19';
 npm install markdown-it --save
 npm install @types/markdown-it --save-dev
 ```
+
+代码高亮
+```shell
+npm install highlight.js
+```
+高亮样式
+```ts
+import 'highlight.js/styles/atom-one-light.css';
+```

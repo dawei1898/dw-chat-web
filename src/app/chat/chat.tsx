@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import useStyle from "@/app/chat/chat-styles";
 import {
-    Bubble,
+    Bubble, BubbleProps,
     Conversations,
     ConversationsProps,
     Prompts,
@@ -24,8 +24,39 @@ import DeepSeekIcon from "@/app/chat/deep-seek-icon";
 import OpenAI from "openai";
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";
 import {ActionsRender} from "@ant-design/x/es/sender";
-//import '@ant-design/v5-patch-for-react-19';
+import hljs from 'highlight.js'; // 高亮
+import 'highlight.js/styles/atom-one-light.css'; // 高亮样式
 
+
+// Markdown渲染
+const renderMarkdown: BubbleProps['messageRender'] = (content) => {
+    const md = new (require('markdown-it'))({
+        html: true,
+        breaks: true,
+        highlight: function (str: string, lang: string) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    return `<pre class="hljs"><code>${
+                        hljs.highlight(str, {
+                            language: lang,
+                            ignoreIllegals: true
+                        }).value
+                    }</code></pre>`;
+                } catch (__) {}
+            }
+            return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+        }
+
+    });
+    return (
+        <Typography>
+            <div
+                className="markdown-body"
+                dangerouslySetInnerHTML={{ __html: md.render(content) }}
+            />
+        </Typography>
+    );
+};
 
 /*
 const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = Array.from({length: 1}).map((_, index) => ({
@@ -106,7 +137,7 @@ const ChatPage = () => {
     const [inputTxt, setInputTxt] = useState<string>('')
     const [requestLoading, setRequestLoading] = useState<boolean>(false)
     const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
-    const [activeKey, setActiveKey] = useState<string>('1')
+    const [activeKey, setActiveKey] = useState<string>('')
 
 
     // 添加会话
@@ -288,6 +319,7 @@ const ChatPage = () => {
             avatar: {icon: <DeepSeekIcon/>, style: {border: '1px solid #c5eaee', backgroundColor: 'white'}},
             footer: !agent.isRequesting() && MessageFooter,
             typing: {step: 5, interval: 50},
+            messageRender: renderMarkdown,
             style: {
                 maxWidth: 700,
             },
@@ -298,6 +330,7 @@ const ChatPage = () => {
         user: {
             placement: 'end',
             variant: 'outlined',
+            messageRender: renderMarkdown,
         },
     };
 

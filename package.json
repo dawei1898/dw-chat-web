@@ -13,6 +13,7 @@
     "@ant-design/x": "^1.0.5",
     "antd": "^5.24.2",
     "antd-style": "^3.7.1",
+    "highlight.js": "^11.11.1",
     "markdown-it": "^14.1.0",
     "next": "15.1.7",
     "openai": "^4.85.4",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

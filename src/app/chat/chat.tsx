@@ -330,7 +330,7 @@ const ChatPage = () => {
         user: {
             placement: 'end',
             variant: 'outlined',
-            messageRender: renderMarkdown,
+            //messageRender: renderMarkdown,
         },
     };
 

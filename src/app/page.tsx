@@ -1,16 +1,9 @@
-import Image from "next/image";
+import Chat from "@/app/chat/chat";
 
 export default function Home() {
   return (
     <div >
-      <Image
-          className="dark:invert"
-          src="/dw-chat-logo.png"
-          alt="dw chat logo"
-          width={38}
-          height={38}
-          priority
-      />
+      <Chat/>
     </div>
   );
 }

@@ -1,8 +1,24 @@
 ## DW Chat (dw-chat)
 
-一个接入 DeepSeek-V3 大模型的纯前端极简聊天页面
+一个接入 DeepSeek-V3 大模型的纯前端极简聊天页面.
 
 
+
+
+#### 主要技术：
+
+1.DeepSeek-V3 LLM
+
+2.React 19
+
+3.NextJS 15
+
+4.Ant Design X
+
+5.tailwind SCC
+
+
+### 本地启动项目
 
 安装依赖
 ```shell
@@ -19,6 +35,9 @@ npm run dev
 
 
 
+
+### 本项目用到的库
+
 安装 Ant Design
 ```shell
 npm install antd --save
@@ -28,9 +47,6 @@ npm install antd --save
 ```shell
 npm install @ant-design/x --save
 ```
-
-
-### 本项目用到的库
 
 安装 Ant Design icon图标
 ```shell

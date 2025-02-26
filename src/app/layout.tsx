@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import "./globals.css";
+import {XProvider} from "@ant-design/x";
 
-const geistSans = Geist({
+/*const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
@@ -11,11 +12,11 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
+});*/
 
 export const metadata: Metadata = {
-  title: "DW Page",
-  description: "DW Page App",
+  title: "DW Chat",
+  description: "DW Chat App",
 };
 
 export default function RootLayout({
@@ -25,10 +26,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={` antialiased`} >
+                {children}
       </body>
     </html>
   );

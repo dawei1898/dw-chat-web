@@ -1,6 +1,6 @@
 ## DW Chat (dw-chat)
 
-一个接入 DeepSeek-V3 大模型的纯前端极简聊天页面.
+一个接入 DeepSeek-V3、DeepSeek-R1 大模型的纯前端极简聊天页面.
 
 
 演示地址：https://dw-chat-web.vercel.app
@@ -8,7 +8,7 @@
 
 #### 主要技术：
 
-1.DeepSeek-V3 LLM
+1.DeepSeek-V3、DeepSeek-R1 LLM
 
 2.React 19
 

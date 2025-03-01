@@ -58,9 +58,17 @@ const useStyle = createStyles(({ token, css }) => {
         messages: css`
             flex: 1;
         `,
-
+        prefix: css`
+             
+            position: absolute;
+            z-index: 1;
+            bottom: 10px;
+            
+        `,
         sender: css`
             margin-top: auto;
+            padding-bottom: 35px;
+            border-radius: 20px;
             box-shadow: ${token.boxShadow};
         `,
     };

@@ -1,123 +1,36 @@
 "use client"
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import useStyle from "@/app/chat/chat-styles";
 import {
-    Bubble, BubbleProps,
+    Bubble,
     Conversations,
     ConversationsProps,
-    Prompts,
-    PromptsProps,
     Sender, useXAgent, useXChat,
-    Welcome,
     XProvider
 } from "@ant-design/x";
-import Image from "next/image";
-import {Button, GetProp, Space, Typography, message as apiMessage, Tooltip} from "antd";
 import {
-    CommentOutlined, CopyOutlined, DislikeFilled, DislikeOutlined,
-    EllipsisOutlined, FireOutlined, HeartOutlined, LikeOutlined,
-    PlusOutlined, ReadOutlined, SendOutlined,
-    ShareAltOutlined,
-    SmileOutlined,
+    Button, GetProp, Space, message as apiMessage, Tooltip
+} from "antd";
+import {
+    CopyOutlined, DislikeOutlined,
+    GlobalOutlined, LikeOutlined,
+    NodeIndexOutlined,
+    PlusOutlined, SendOutlined,
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import DeepSeekIcon from "@/app/chat/deep-seek-icon";
 import OpenAI from "openai";
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";
 import {ActionsRender} from "@ant-design/x/es/sender";
-import hljs from 'highlight.js'; // 高亮
-import 'highlight.js/styles/atom-one-light.css'; // 高亮样式
+import MarkdownRender from "@/app/chat/markdown-render";
+import InitWelcome from "@/app/chat/init-welcome";
+import Logo from "@/app/chat/logo";
 
 
-// Markdown渲染
-const renderMarkdown: BubbleProps['messageRender'] = (content) => {
-    const md = new (require('markdown-it'))({
-        html: true,
-        breaks: true,
-        highlight: function (str: string, lang: string) {
-            if (lang && hljs.getLanguage(lang)) {
-                try {
-                    return `<pre class="hljs"><code>${
-                        hljs.highlight(str, {
-                            language: lang,
-                            ignoreIllegals: true
-                        }).value
-                    }</code></pre>`;
-                } catch (__) {}
-            }
-            return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-        }
 
-    });
-    return (
-        <Typography>
-            <div
-                className="markdown-body"
-                dangerouslySetInnerHTML={{ __html: md.render(content) }}
-            />
-        </Typography>
-    );
-};
-
-/*
-const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = Array.from({length: 1}).map((_, index) => ({
-    key: `${index + 1}`,
-    label: `Conversation Item ${index + 1}`,
-}));
-*/
 
 const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
 
-const renderTitle = (icon: React.ReactElement, title: string) => (
-    <Space align="start">
-        {icon}
-        <span>{title}</span>
-    </Space>
-);
-
-const promptItems: PromptsProps['items'] = [
-    {
-        key: '1',
-        label: renderTitle(<FireOutlined style={{color: '#FF4D4F'}}/>, 'Hot Topics'),
-        description: 'What are you interested in?',
-        children: [
-            {
-                key: '1-1',
-                description: `What's new in X?`,
-            },
-            {
-                key: '1-2',
-                description: `What's AGI?`,
-            },
-            {
-                key: '1-3',
-                description: `Where is the doc?`,
-            },
-        ],
-    },
-    {
-        key: '2',
-        label: renderTitle(<ReadOutlined style={{color: '#1890FF'}}/>, 'Design Guide'),
-        description: 'How to design a good product?',
-        children: [
-            {
-                key: '2-1',
-                icon: <HeartOutlined/>,
-                description: `Know the well`,
-            },
-            {
-                key: '2-2',
-                icon: <SmileOutlined/>,
-                description: `Set the AI role`,
-            },
-            {
-                key: '2-3',
-                icon: <CommentOutlined/>,
-                description: `Express the feeling`,
-            },
-        ],
-    }
-];
 
 
 /**
@@ -139,6 +52,11 @@ const ChatPage = () => {
     const [requestLoading, setRequestLoading] = useState<boolean>(false)
     const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
     const [activeKey, setActiveKey] = useState<string>('')
+    const [openSearch, setOpenSearch] = useState<boolean>(false)
+    const [openReasoner, setOpenReasoner] = useState<boolean>(false)
+    const [model, setModel] = useState<string>(MODEL_CHAT)
+    const modelRef = useRef(model);
+    const abortControllerRef = useRef<AbortController>(null);
 
 
     // 添加会话
@@ -165,93 +83,51 @@ const ChatPage = () => {
         }
     }
 
-
-    // Logo
-    const LogoNode = (
-        <Space
-            className={styles.logo}
-            size={'middle'} align={'start'}
-        >
-            <Image
-                className="dark:invert"
-                src="/dw-chat-logo.png"
-                alt="dw chat logo"
-                width={38}
-                height={38}
-                priority
-            />
-            <Typography.Title level={4}>
-                DW Chat
-            </Typography.Title>
-        </Space>
-    );
-
-    // 初始态的欢迎语和提示词
-    const placeholderNode = (
-        <Space
-            className={styles.placeholder}
-            direction='vertical'
-            size={16}
-        >
-            {/* 欢迎语 */}
-            <Welcome
-                variant="borderless"
-                icon="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*s5sNRo5LjfQAAAAAAAAAAAAADgCCAQ/fmt.webp"
-                title="Hello, I'm Ant Design X"
-                description="Base on Ant Design, AGI product interface solution, create a better intelligent vision~"
-                extra={
-                    <Space>
-                        <Button icon={<ShareAltOutlined/>}/>
-                        <Button icon={<EllipsisOutlined/>}/>
-                    </Space>
-                }
-            />
-            {/* 提示词 */}
-            <Prompts
-                title={'Do you want?'}
-                items={promptItems}
-                styles={{
-                    list: {
-                        width: '100%',
-                    },
-                    item: {
-                        flex: 1,
-                    }
-                }}
-                onItemClick={({data}) => {
-                    if (data.description) {
-                        handleSubmit(data.description.toString())
-                    }
-                }}
-            />
-        </Space>
-    );
-
-
     /**
      * 与大模型交互
      */
-    const abortController = new AbortController();
     const [agent] = useXAgent({
         request: async (info, callbacks) => {
             const {message, messages} = info
             const {onUpdate, onSuccess, onError} = callbacks
             console.log('message', message)
             console.log('message list', messages)
+            console.log('model:', modelRef.current)
 
             let content = ''
+            let reasoningContent: string = '==========  思考开始  ==========\n'
+            let reasoningOver: boolean = false
             try {
                 const streamCompletions = await client.chat.completions.create({
-                        model: MODEL_CHAT,
+                        model: modelRef.current,
                         messages: [{role: 'user', content: message || ''}],
                         stream: true
                     },
                     {
-                        signal: abortController.signal, // 控制停止
+                        signal: abortControllerRef.current?.signal, // 控制停止
                     });
                 for await (let chunk of streamCompletions) {
                     setRequestLoading(false);
-                    content += chunk.choices[0]?.delta?.content;
+                    const reasoning_content: string = (chunk.choices[0]?.delta as any)?.reasoning_content
+                    const resp_content: any = chunk.choices[0]?.delta?.content
+
+                    // 思考中
+                    if (reasoning_content) {
+                        reasoningContent += reasoning_content;
+                        content = reasoningContent;
+                    }
+                    // 思考结束
+                    else if (modelRef.current === MODEL_REASONER
+                        && resp_content && !reasoningOver) {
+                        reasoningContent += '\n==========  思考结束  ==========\n\n\n';
+                        content = reasoningContent;
+                        reasoningOver = true;
+                        console.log('思考结束。')
+                    }
+                    // 回答
+                    if (resp_content) {
+                        content += resp_content;
+                    }
                     onUpdate(content);
                 }
 
@@ -265,14 +141,21 @@ const ChatPage = () => {
         }
     });
 
+    useEffect(() => {
+        const newModel = openReasoner ? MODEL_REASONER : MODEL_CHAT;
+        setModel(newModel)
+        modelRef.current = newModel
+        console.log('set model:', newModel)
+    }, [openReasoner]);
+
+    useEffect(() => {
+        modelRef.current = model;
+    }, [model]);
+
     const {onRequest, messages, setMessages} = useXChat({
         agent: agent,
         requestPlaceholder: '请求中...',
     });
-
-    /*useEffect(() => {
-        setMessages([])
-    }, [activeKey]);*/
 
     // 点击添加会话
     const clickAddConversation = () => {
@@ -284,10 +167,17 @@ const ChatPage = () => {
     // 停止
     const handleCancel = () => {
         setRequestLoading(false);
-        // 终止请求
-        abortController.abort()
+        abortControllerRef.current?.abort('停止');
         apiMessage.error('已停止')
     }
+
+    // 通过 useEffect 清理函数自动取消未完成的请求：
+    useEffect(() => {
+        abortControllerRef.current = new AbortController();
+        return () => {
+            abortControllerRef.current?.abort('停止');
+        }
+    }, []);
 
 
     const MessageFooter = (
@@ -320,7 +210,7 @@ const ChatPage = () => {
             avatar: {icon: <DeepSeekIcon/>, style: {border: '1px solid #c5eaee', backgroundColor: 'white'}},
             footer: !agent.isRequesting() && MessageFooter,
             typing: {step: 5, interval: 50},
-            messageRender: renderMarkdown,
+            messageRender: (content) => (<MarkdownRender content={content}/>),
             style: {
                 maxWidth: 700,
             },
@@ -331,7 +221,6 @@ const ChatPage = () => {
         user: {
             placement: 'end',
             variant: 'outlined',
-            //messageRender: renderMarkdown,
         },
     };
 
@@ -345,7 +234,7 @@ const ChatPage = () => {
         }));
 
     const finalMessageItems: BubbleDataType[] = messageItems.length > 0
-        ? messageItems : [{content: placeholderNode, variant: 'borderless'}];
+        ? messageItems : [{content: (<InitWelcome handleSubmit={handleSubmit}/>), variant: 'borderless'}];
 
     /* 自定义发送按钮 */
     const senderActions: ActionsRender = (_, info) => {
@@ -363,13 +252,46 @@ const ChatPage = () => {
         )
     };
 
+    /* 输入框自定义前缀 */
+    const PrefixNode = (
+        <Space className={styles.prefix} >
+            <Tooltip
+                title={openReasoner ? '' : '调用新模型 DeepSeek-R1，解决推理问题'}
+                placement='left'
+            >
+                <Button
+                    size='small'
+                    shape='round'
+                    type={openReasoner ? 'primary' : 'default'}
+                    onClick={() => setOpenReasoner(!openReasoner)}
+                >
+                    <NodeIndexOutlined />
+                    深度思考(R1)
+                </Button>
+            </Tooltip>
+            <Tooltip
+                title={openSearch ? '' : '按需搜索网页'}
+                placement='right'
+            >
+                <Button
+                    size='small'
+                    shape='round'
+                    type={openSearch ? 'primary' : 'default'}
+                    onClick={() => setOpenSearch(!openSearch)}
+                >
+                    <GlobalOutlined />
+                    联网搜索
+                </Button>
+            </Tooltip>
+        </Space>
+    );
 
     return (
         <XProvider>
             <div className={styles.layout}>
                 <div className={styles.sider}>
                     {/* Logo */}
-                    {LogoNode}
+                    {<Logo/>}
 
                     {/* 添加会话 */}
                     <div>
@@ -390,7 +312,6 @@ const ChatPage = () => {
                             items={conversationsItems}
                             activeKey={activeKey}
                             onActiveChange={setActiveKey}
-
                         />
                     </div>
 
@@ -413,8 +334,10 @@ const ChatPage = () => {
                         onCancel={handleCancel}
                         actions={senderActions}
                         styles={{
-                            input: {minHeight: 75}
+                            input: {minHeight: 60},
+                            actions: {marginBottom: -35}
                         }}
+                        prefix={PrefixNode}
                     />
                 </div>
 

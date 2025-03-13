@@ -18,6 +18,7 @@ import {
     PlusOutlined, SendOutlined,
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
+import {AntdRegistry} from "@ant-design/nextjs-registry";
 import DeepSeekIcon from "@/app/chat/deep-seek-icon";
 import OpenAI from "openai";
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";
@@ -287,62 +288,64 @@ const ChatPage = () => {
     );
 
     return (
-        <XProvider>
-            <div className={styles.layout}>
-                <div className={styles.sider}>
-                    {/* Logo */}
-                    {<Logo/>}
+        <AntdRegistry>
+            <XProvider>
+                <div className={styles.layout}>
+                    <div className={styles.sider}>
+                        {/* Logo */}
+                        {<Logo/>}
 
-                    {/* 添加会话 */}
-                    <div>
-                        <Button
-                            className={styles.addButton}
-                            type={'link'}
-                            icon={<PlusOutlined/>}
-                            onClick={clickAddConversation}
-                        >
-                            新建对话
-                        </Button>
+                        {/* 添加会话 */}
+                        <div>
+                            <Button
+                                className={styles.addButton}
+                                type={'link'}
+                                icon={<PlusOutlined/>}
+                                onClick={clickAddConversation}
+                            >
+                                新建对话
+                            </Button>
+                        </div>
+
+                        {/* 会话管理 */}
+                        <div>
+                            <Conversations
+                                className={styles.conversations}
+                                items={conversationsItems}
+                                activeKey={activeKey}
+                                onActiveChange={setActiveKey}
+                            />
+                        </div>
+
                     </div>
+                    <div className={styles.chat}>
+                        {/* 消息列表 */}
+                        <Bubble.List
+                            roles={roles}
+                            items={finalMessageItems}
+                        />
 
-                    {/* 会话管理 */}
-                    <div>
-                        <Conversations
-                            className={styles.conversations}
-                            items={conversationsItems}
-                            activeKey={activeKey}
-                            onActiveChange={setActiveKey}
+                        {/* 输入框 */}
+                        <Sender
+                            className={styles.sender}
+                            placeholder='请输入你的问题...'
+                            loading={agent.isRequesting()}
+                            value={inputTxt}
+                            onChange={setInputTxt}
+                            onSubmit={handleSubmit}
+                            onCancel={handleCancel}
+                            actions={senderActions}
+                            styles={{
+                                input: {minHeight: 60},
+                                actions: {marginBottom: -35}
+                            }}
+                            prefix={PrefixNode}
                         />
                     </div>
 
                 </div>
-                <div className={styles.chat}>
-                    {/* 消息列表 */}
-                    <Bubble.List
-                        roles={roles}
-                        items={finalMessageItems}
-                    />
-
-                    {/* 输入框 */}
-                    <Sender
-                        className={styles.sender}
-                        placeholder='请输入你的问题...'
-                        loading={agent.isRequesting()}
-                        value={inputTxt}
-                        onChange={setInputTxt}
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancel}
-                        actions={senderActions}
-                        styles={{
-                            input: {minHeight: 60},
-                            actions: {marginBottom: -35}
-                        }}
-                        prefix={PrefixNode}
-                    />
-                </div>
-
-            </div>
-        </XProvider>
+            </XProvider>
+        </AntdRegistry>
     );
 };
 

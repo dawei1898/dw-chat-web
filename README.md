@@ -73,6 +73,11 @@ npm install --save-dev @ant-design/v5-patch-for-react-19
 import '@ant-design/v5-patch-for-react-19';
 ```
 
+安装 @ant-design/nextjs-registry，解决antd组件页面闪动的情况
+```bash
+npm install @ant-design/nextjs-registry --save
+```
+
 安装 markdown-it
 ```shell
 npm install markdown-it --save

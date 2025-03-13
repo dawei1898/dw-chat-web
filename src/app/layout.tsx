@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });*/
 
 export const metadata: Metadata = {
-  title: "DW Chat",
-  description: "DW Chat App",
+  title: "DwChat",
+  description: "DwChat App",
 };
 
 export default function RootLayout({

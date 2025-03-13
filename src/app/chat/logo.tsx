@@ -1,5 +1,5 @@
 import React from 'react';
-import {Space, Typography} from "antd";
+import {Flex, Space, Typography} from "antd";
 import Image from "next/image";
 import useStyle from "@/app/chat/chat-styles";
 
@@ -7,22 +7,23 @@ const Logo = () => {
     const {styles} = useStyle();
 
     return (
-        <Space
+        <Flex
             className={styles.logo}
-            size={'middle'} align={'start'}
+            gap={'middle'}
+            align={'center'}
         >
             <Image
                 className="dark:invert"
-                src="/dw-chat-logo.png"
+                src="/whale4.svg"
                 alt="dw chat logo"
                 width={38}
                 height={38}
                 priority
             />
-            <Typography.Title level={4}>
-                DW Chat
-            </Typography.Title>
-        </Space>
+            <Typography.Text strong style={{fontSize: '20px'}}>
+                DwChat
+            </Typography.Text>
+        </Flex>
     );
 };
 

@@ -10,7 +10,6 @@ import {
     ShareAltOutlined,
     SmileOutlined
 } from "@ant-design/icons";
-import useStyle from "@/app/chat/chat-styles";
 
 
 const renderTitle = (icon: React.ReactElement, title: string) => (

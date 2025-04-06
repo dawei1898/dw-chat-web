@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import {XProvider} from "@ant-design/x";
 
-/*const geistSans = Geist({
+const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
@@ -11,10 +10,10 @@ import {XProvider} from "@ant-design/x";
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});*/
+});
 
 export const metadata: Metadata = {
-  title: "DwChat",
+  title: "Dw Chat",
   description: "DwChat App",
 };
 
@@ -24,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={` antialiased`} >
+    <html lang="en" suppressHydrationWarning>
+      <body  className={`${geistSans.variable} ${geistMono.variable} antialiased`} >
                 {children}
       </body>
     </html>

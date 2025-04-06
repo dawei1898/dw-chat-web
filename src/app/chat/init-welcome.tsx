@@ -73,11 +73,11 @@ type Props = {
  * 初始态的欢迎语和提示词
  */
 const InitWelcome = (props: Props) => {
-    const {styles} = useStyle();
+    //const {styles} = useStyle();
 
     return (
         <Space
-            className={styles.placeholder}
+            className='pt-10'
             direction='vertical'
             size={16}
         >

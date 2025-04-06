@@ -1,26 +1,21 @@
 "use client"
 import React, {useEffect, useRef, useState} from 'react';
-import dynamic from 'next/dynamic';
+import useStyle from "@/app/chat/chat-styles";
 import {
     Bubble,
     Conversations,
     ConversationsProps,
-    Sender,
-    useXAgent,
-    useXChat,
+    Sender, useXAgent, useXChat,
     XProvider
 } from "@ant-design/x";
 import {
-    Button, GetProp, Space,
-    message as apiMessage,
-    Tooltip, theme,
-    ThemeConfig, Flex
+    Button, GetProp, Space, message as apiMessage, Tooltip
 } from "antd";
 import {
     CopyOutlined, DislikeOutlined,
     GlobalOutlined, LikeOutlined,
     NodeIndexOutlined,
-    PlusOutlined, SendOutlined, UserOutlined,
+    PlusOutlined, SendOutlined,
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import {AntdRegistry} from "@ant-design/nextjs-registry";
@@ -31,24 +26,13 @@ import {ActionsRender} from "@ant-design/x/es/sender";
 import MarkdownRender from "@/app/chat/markdown-render";
 import InitWelcome from "@/app/chat/init-welcome";
 import Logo from "@/app/chat/logo";
-import zhCN from "antd/locale/zh_CN";
-import {ProLayoutProps} from '@ant-design/pro-components';
-import AvatarDropdown from "@/app/chat/avatar-dropdown";
-import Footer from "@/app/chat/footer";
-import HeaderActions from "@/app/chat/header-actions";
-import type {ProTokenType} from "@ant-design/pro-provider";
-import {SiderMenuProps} from "@ant-design/pro-layout/es/components/SiderMenu/SiderMenu";
-import type {HeaderViewProps} from "@ant-design/pro-layout/es/components/Header";
 
 
-// 动态导入
-const ProLayout = dynamic(
-    () => import('@ant-design/pro-components').then(mod => mod.ProLayout),
-    { ssr: false }
-);
-const {useToken} = theme;
+
 
 const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
+
+
 
 /**
  * DeepSeek大模型配置
@@ -64,11 +48,10 @@ const client = new OpenAI({
 
 
 const ChatPage = () => {
-    const {token} = useToken();
-    const [dark, setDark] = useState(false);
-    const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
+    const {styles} = useStyle();
     const [inputTxt, setInputTxt] = useState<string>('')
     const [requestLoading, setRequestLoading] = useState<boolean>(false)
+    const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
     const [activeKey, setActiveKey] = useState<string>('')
     const [openSearch, setOpenSearch] = useState<boolean>(false)
     const [openReasoner, setOpenReasoner] = useState<boolean>(false)
@@ -76,65 +59,6 @@ const ChatPage = () => {
     const modelRef = useRef(model);
     const abortControllerRef = useRef<AbortController>(null);
 
-
-    // 主题配置
-    const customTheme: ThemeConfig = {
-        algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-        token: {
-            colorPrimary: token.colorPrimary,
-        }
-    }
-
-    // ProLayout Token
-    const proLayoutToken: ProTokenType['layout'] = {
-        pageContainer: {
-            colorBgPageContainer: dark ? '' : token.colorBgBase,
-            paddingBlockPageContainerContent: 10,  // 上下内距离
-            paddingInlinePageContainerContent: 10, // 左右内距离
-        },
-    }
-
-    // 开启新对话按钮
-    const addConversationRender = (props: SiderMenuProps) => {
-        return <>
-            {props.collapsed ?
-                <Tooltip title='开启新对话'>
-                    <Button
-                        style={{
-                            backgroundColor: '#1677ff0f',
-                            border: '1px solid #1677ff34',
-                            width: ' 35px',
-                            margin: '10px -7px',
-                        }}
-                        type='link'
-                        icon={<PlusOutlined/>}
-                        onClick={clickAddConversation}
-                    />
-                </Tooltip>
-                :
-                <Button
-                    style={{
-                        backgroundColor: '#1677ff0f',
-                        border: '1px solid #1677ff34',
-                        width: 'calc(100% - 25px)',
-                        height: '35px',
-                        margin: '12px',
-                    }}
-                    type={'link'}
-                    icon={<PlusOutlined/>}
-                    onClick={clickAddConversation}
-                >
-                    开启新对话
-                </Button>
-            }
-        </>
-    }
-
-    // 点击添加会话
-    const clickAddConversation = () => {
-        setActiveKey('')
-        setMessages([])
-    }
 
     // 添加会话
     const addConversation = (msg: string) => {
@@ -150,39 +74,15 @@ const ChatPage = () => {
     };
 
 
-    // 会话管理列表
-    const conversationRender = (props: SiderMenuProps, defaultDom: React.ReactNode) => {
-        return <>
-            {!props.collapsed &&
-                <Conversations
-                    style={{
-                        padding: '0 12px',
-                        flex: '1',
-                        overflowY: 'auto',
-                    }}
-                    items={conversationsItems}
-                    activeKey={activeKey}
-                    onActiveChange={setActiveKey}
-                />
-            }
-        </>
+    // 发送消息
+    const handleSubmit = (msg: string) => {
+        onRequest(msg);
+        setInputTxt('');
+        setRequestLoading(true);
+        if (!activeKey) {
+            addConversation(msg);
+        }
     }
-
-    // actionsRender
-    const actionsRender = (props: HeaderViewProps) => {
-        return <HeaderActions headerProps={props} dark={dark} setDark={setDark}/>
-    }
-
-    // 用户头像
-    const avatarRender: ProLayoutProps['avatarProps'] = {
-        icon: (<UserOutlined/>),
-        size: 'small',
-        title: 'dawei',
-        render: (_: any, avatarChildren: React.ReactNode) => {
-            return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
-        },
-    }
-
 
     /**
      * 与大模型交互
@@ -242,11 +142,6 @@ const ChatPage = () => {
         }
     });
 
-    const {onRequest, messages, setMessages} = useXChat({
-        agent: agent,
-        requestPlaceholder: '请求中...',
-    });
-
     useEffect(() => {
         const newModel = openReasoner ? MODEL_REASONER : MODEL_CHAT;
         setModel(newModel)
@@ -258,6 +153,32 @@ const ChatPage = () => {
         modelRef.current = model;
     }, [model]);
 
+    const {onRequest, messages, setMessages} = useXChat({
+        agent: agent,
+        requestPlaceholder: '请求中...',
+    });
+
+    // 点击添加会话
+    const clickAddConversation = () => {
+        setActiveKey('')
+        setMessages([])
+    }
+
+
+    // 停止
+    const handleCancel = () => {
+        setRequestLoading(false);
+        abortControllerRef.current?.abort('停止');
+        apiMessage.error('已停止')
+    }
+
+    // 通过 useEffect 清理函数自动取消未完成的请求：
+    useEffect(() => {
+        abortControllerRef.current = new AbortController();
+        return () => {
+            abortControllerRef.current?.abort('停止');
+        }
+    }, []);
 
 
     const MessageFooter = (
@@ -282,7 +203,6 @@ const ChatPage = () => {
             </Tooltip>
         </Space>
     )
-
 
     // 角色格式设定
     const roles: GetProp<typeof Bubble.List, 'roles'> = {
@@ -314,32 +234,28 @@ const ChatPage = () => {
             loading: status === 'loading' && requestLoading,
         }));
 
-    // 发送消息
-    const handleSubmit = (msg: string) => {
-        onRequest(msg);
-        setInputTxt('');
-        setRequestLoading(true);
-        if (!activeKey) {
-            addConversation(msg);
-        }
-    }
+    const finalMessageItems: BubbleDataType[] = messageItems.length > 0
+        ? messageItems : [{content: (<InitWelcome handleSubmit={handleSubmit}/>), variant: 'borderless'}];
 
-    const finalMessageItems: BubbleDataType[] = messageItems.length > 0 ? messageItems
-        : [{
-            content: (<InitWelcome handleSubmit={handleSubmit}/>),
-            variant: 'borderless'
-        }];
-
+    /* 自定义发送按钮 */
+    const senderActions: ActionsRender = (_, info) => {
+        const {SendButton, LoadingButton} = info.components;
+        return (
+            agent.isRequesting() ? (
+                <Tooltip title='停止'>
+                    <LoadingButton/>
+                </Tooltip>
+            ) : (
+                <Tooltip title={inputTxt ? '发送' : '请输入你的问题'}>
+                    <SendButton icon={<SendOutlined rotate={315}/>}/>
+                </Tooltip>
+            )
+        )
+    };
 
     /* 输入框自定义前缀 */
     const PrefixNode = (
-        <Space
-            style={{
-                position: 'absolute',
-                zIndex: 1,
-                bottom: '10px',
-            }}
-        >
+        <Space className={styles.prefix} >
             <Tooltip
                 title={openReasoner ? '' : '调用新模型 DeepSeek-R1，解决推理问题'}
                 placement='left'
@@ -371,66 +287,38 @@ const ChatPage = () => {
         </Space>
     );
 
-
-    /* 自定义发送按钮 */
-    const senderActions: ActionsRender = (_, info) => {
-        const {SendButton, LoadingButton} = info.components;
-        return (
-            agent.isRequesting() ? (
-                <Tooltip title='停止'>
-                    <LoadingButton/>
-                </Tooltip>
-            ) : (
-                <Tooltip title={inputTxt ? '发送' : '请输入你的问题'}>
-                    <SendButton icon={<SendOutlined rotate={315}/>}/>
-                </Tooltip>
-            )
-        )
-    };
-
-
-    // 停止
-    const handleCancel = () => {
-        setRequestLoading(false);
-        abortControllerRef.current?.abort('停止');
-        apiMessage.error('已停止')
-    }
-
-    // 通过 useEffect 清理函数自动取消未完成的请求：
-    useEffect(() => {
-        abortControllerRef.current = new AbortController();
-        return () => {
-            abortControllerRef.current?.abort('停止');
-        }
-    }, []);
-
     return (
         <AntdRegistry>
-            <XProvider
-                locale={zhCN}
-                theme={customTheme}
-            >
-                <ProLayout
-                    className='h-lvh'
-                    token={proLayoutToken}
-                    pure={false} // 是否删除自带页面
-                    navTheme={'light'}
-                    layout={'side'}
-                    siderWidth={250}
-                    logo={<Logo/>}
-                    title='DwChat'
-                    menuExtraRender={addConversationRender} // 开启新对话按钮
-                    menuContentRender={conversationRender} // 会话管理
-                    actionsRender={actionsRender}
-                    avatarProps={avatarRender} // 用户头像
-                    footerRender={() => (<Footer/>)}  // 页脚
-                >
-                    <Flex
-                        vertical
-                        gap={'large'}
-                        className='w-full max-w-2xl'
-                        style={{ margin: '1px auto', height: '95vh'}}
-                    >
+            <XProvider>
+                <div className={styles.layout}>
+                    <div className={styles.sider}>
+                        {/* Logo */}
+                        {<Logo/>}
+
+                        {/* 添加会话 */}
+                        <div>
+                            <Button
+                                className={styles.addButton}
+                                type={'link'}
+                                icon={<PlusOutlined/>}
+                                onClick={clickAddConversation}
+                            >
+                                新建对话
+                            </Button>
+                        </div>
+
+                        {/* 会话管理 */}
+                        <div>
+                            <Conversations
+                                className={styles.conversations}
+                                items={conversationsItems}
+                                activeKey={activeKey}
+                                onActiveChange={setActiveKey}
+                            />
+                        </div>
+
+                    </div>
+                    <div className={styles.chat}>
                         {/* 消息列表 */}
                         <Bubble.List
                             roles={roles}
@@ -439,15 +327,7 @@ const ChatPage = () => {
 
                         {/* 输入框 */}
                         <Sender
-                            style={{
-                                marginTop: 'auto',
-                                paddingBottom: '35px',
-                                borderRadius: '20px',
-                            }}
-                            styles={{
-                                input: {minHeight: 60},
-                                actions: {marginBottom: -35}
-                            }}
+                            className={styles.sender}
                             placeholder='请输入你的问题...'
                             loading={agent.isRequesting()}
                             value={inputTxt}
@@ -455,10 +335,15 @@ const ChatPage = () => {
                             onSubmit={handleSubmit}
                             onCancel={handleCancel}
                             actions={senderActions}
+                            styles={{
+                                input: {minHeight: 60},
+                                actions: {marginBottom: -35}
+                            }}
                             prefix={PrefixNode}
                         />
-                    </Flex>
-                </ProLayout>
+                    </div>
+
+                </div>
             </XProvider>
         </AntdRegistry>
     );

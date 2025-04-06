@@ -32,3 +32,8 @@ pre.hljs {
   background-color: #e0dfdf;
 }
 
+/* 去除侧边栏 logo 与菜单的分割线 */
+.ant-pro-sider .ant-pro-sider-logo {
+  border-bottom: none !important;
+}
+

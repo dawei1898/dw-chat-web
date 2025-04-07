@@ -23,7 +23,6 @@ import {
     PlusOutlined, UserOutlined,
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
-import {AntdRegistry} from "@ant-design/nextjs-registry";
 import OpenAI from "openai";
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";
 import MarkdownRender from "@/app/chat/markdown-render";
@@ -40,6 +39,7 @@ import type {HeaderViewProps} from "@ant-design/pro-layout/es/components/Header"
 import {DeepSeekIcon, PanelLeftClose, PanelLeftOpen} from "@/components/Icons";
 import {Conversation} from "@ant-design/x/es/conversations";
 import {writeText} from "clipboard-polyfill";
+import {appConfig} from "@/utils/appConfig";
 
 
 // 动态导入
@@ -47,7 +47,6 @@ const ProLayout = dynamic(
     () => import('@ant-design/pro-components').then(mod => mod.ProLayout),
     { ssr: false }
 );
-const {useToken} = theme;
 
 const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
 
@@ -58,14 +57,14 @@ const MODEL_CHAT = 'deepseek-chat'
 const MODEL_REASONER = 'deepseek-reasoner'
 
 const client = new OpenAI({
-    baseURL: process.env.NEXT_PUBLIC_DEEPSEEK_BASE_URL,
-    apiKey: process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY,
+    baseURL: appConfig.deepSeekBaseUrl,
+    apiKey: appConfig.deepSeekApiKey,
     dangerouslyAllowBrowser: true,
 });
 
 
 const ChatPage = () => {
-    const {token} = useToken();
+    const {token} = theme.useToken();
     const [dark, setDark] = useState(false);
     const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
     const [inputTxt, setInputTxt] = useState<string>('')
@@ -507,7 +506,6 @@ const ChatPage = () => {
     }, []);
 
     return (
-        <AntdRegistry>
             <XProvider
                 locale={zhCN}
                 theme={customTheme}
@@ -520,7 +518,7 @@ const ChatPage = () => {
                     layout={'side'}
                     siderWidth={250}
                     logo={<Logo/>}
-                    title='Dw Chat'
+                    title={appConfig.appName}
                     menuHeaderRender={menuHeaderRender} // Logo Title
                     menuExtraRender={addConversationRender} // 开启新对话按钮
                     menuContentRender={conversationRender} // 会话管理
@@ -564,7 +562,6 @@ const ChatPage = () => {
                     </Flex>
                 </ProLayout>
             </XProvider>
-        </AntdRegistry>
     );
 };
 

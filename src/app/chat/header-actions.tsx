@@ -29,6 +29,7 @@ const HeaderActions = (props: HeaderActions) => {
 
         /* Github */
         <Link
+            key='github_link'
             href='https://github.com/dawei1898/dw-chat-web'
             target="_blank"
         >

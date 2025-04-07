@@ -227,8 +227,8 @@ const ChatPage = () => {
             // 删除会话
             if (menuInfo.key === 'delete') {
                 Modal.confirm({
-                    title: '删除会话',
-                    content: '确认删除该会话吗？',
+                    title: '永久删除对话',
+                    content: '删除后，该对话不可恢复，确认删除吗？',
                     onOk: () => {
                         // 过滤掉当前选中的会话项
                         const updatedConversations = conversationsItems.filter(

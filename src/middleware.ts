@@ -15,9 +15,12 @@ const middleware = (request: NextRequest) => {
     const pathname = request.nextUrl.pathname;
 
     // 拦截 /dwc/api 请求，设置 token
-    if (pathname.startsWith('/dwc/api/') && !pathname.startsWith('/dwc/api/user/login')) {
+    if (pathname.startsWith('/dwc/api/')
+        && !pathname.startsWith('/dwc/api/user/login')
+        && !pathname.startsWith('/dwc/api/user/register')
+    ) {
         let loginUserCookie = request.cookies.get(COOKIE_LOGIN_USER)
-        console.log('loginUserCookie:', loginUserCookie)
+        //console.log('loginUserCookie:', loginUserCookie)
         if (loginUserCookie) {
             const loginUser: LoginUser = JSON.parse(loginUserCookie?.value);
             // Clone the request headers and set a new header 'Authorization'

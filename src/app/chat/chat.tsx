@@ -1,4 +1,5 @@
 "use client"
+
 import React, {useEffect, useRef, useState} from 'react';
 import dynamic from 'next/dynamic';
 import {
@@ -17,10 +18,11 @@ import {
     ThemeConfig, Flex, Modal, Input
 } from "antd";
 import {
-    CopyOutlined, DeleteOutlined, DislikeOutlined, EditOutlined,
+    CopyOutlined, DeleteOutlined,
+    DislikeOutlined, EditOutlined,
     GlobalOutlined, LikeOutlined,
     NodeIndexOutlined, PaperClipOutlined,
-    PlusOutlined, UserOutlined,
+    PlusOutlined
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import OpenAI from "openai";
@@ -29,8 +31,6 @@ import MarkdownRender from "@/app/chat/markdown-render";
 import InitWelcome from "@/app/chat/init-welcome";
 import Logo from "@/app/chat/logo";
 import zhCN from "antd/locale/zh_CN";
-import {ProLayoutProps} from '@ant-design/pro-components';
-import AvatarDropdown from "@/app/chat/avatar-dropdown";
 import Footer from "@/app/chat/footer";
 import HeaderActions from "@/app/chat/header-actions";
 import type {ProTokenType} from "@ant-design/pro-provider";
@@ -40,13 +40,15 @@ import {DeepSeekIcon, PanelLeftClose, PanelLeftOpen} from "@/components/Icons";
 import {Conversation} from "@ant-design/x/es/conversations";
 import {writeText} from "clipboard-polyfill";
 import {appConfig} from "@/utils/appConfig";
+import {avatarRender} from "@/app/chat/sidebar-avatar";
+import {ProLayout} from "@ant-design/pro-layout";
 
 
 // 动态导入
-const ProLayout = dynamic(
+/*const ProLayout = dynamic(
     () => import('@ant-design/pro-components').then(mod => mod.ProLayout),
     { ssr: false }
-);
+);*/
 
 const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
 
@@ -263,16 +265,6 @@ const ChatPage = () => {
     // actionsRender
     const actionsRender = (props: HeaderViewProps) => {
         return <HeaderActions headerProps={props} dark={dark} setDark={setDark}/>
-    }
-
-    // 用户头像
-    const avatarRender: ProLayoutProps['avatarProps'] = {
-        icon: (<UserOutlined/>),
-        size: 'small',
-        title: 'dawei',
-        render: (_: any, avatarChildren: React.ReactNode) => {
-            return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
-        },
     }
 
 

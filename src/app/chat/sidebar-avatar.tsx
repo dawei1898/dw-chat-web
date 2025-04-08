@@ -20,10 +20,10 @@ const AvatarDropdown = (
         const resp = await logoutAPI()
         if (resp.code == 200) {
             await cleanLoginUserCookie()
-            router.push('/login')
         } else {
             message.error(resp.message)
         }
+        router.push('/login')
     }
 
     // 用户头像下拉菜单项

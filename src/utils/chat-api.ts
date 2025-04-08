@@ -6,7 +6,7 @@ import type {ApiResponse, PageParam, PageResult} from "@/utils/index";
  * 会话记录
  */
 export interface ChatRecord {
-    chatId?: string;
+    chatId: string;
     chatName: string;
 }
 
@@ -33,6 +33,18 @@ export interface StreamChatParam {
     modelId?: string;
     isReasoning?: boolean;
     isSearch?: boolean;
+}
+
+/**
+ * 对话消息返参
+ */
+export interface MessageVO {
+    msgId: string;
+    chatId: string;
+    type: string;
+    content: string;
+    voteType?: string;
+    modelId?: string;
 }
 
 
@@ -115,7 +127,7 @@ export const  queryMessageListAPI = async (chatId: string) => {
             "Content-Type": "application/json",
         },
     }
-    const response: ApiResponse<[]> = await fetch(url, options).then(resp => resp.json());
+    const response: ApiResponse<MessageVO[]> = await fetch(url, options).then(resp => resp.json());
     console.log('queryMessageListAPI response:', JSON.stringify(response));
     return response;
 }

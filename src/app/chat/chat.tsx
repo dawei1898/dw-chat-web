@@ -42,6 +42,7 @@ import {writeText} from "clipboard-polyfill";
 import {appConfig} from "@/utils/appConfig";
 import {avatarRender} from "@/app/chat/sidebar-avatar";
 import {ProLayout} from "@ant-design/pro-layout";
+import {deleteChatAPI, MessageVO, queryChatPageAPI, queryMessageListAPI, saveChatAPI} from "@/utils/chat-api";
 
 
 // 动态导入
@@ -68,13 +69,14 @@ const client = new OpenAI({
 const ChatPage = () => {
     const {token} = theme.useToken();
     const [dark, setDark] = useState(false);
+    const [inputTxt, setInputTxt] = useState<string>('');
+    const [requestLoading, setRequestLoading] = useState<boolean>(false);
     const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
-    const [inputTxt, setInputTxt] = useState<string>('')
-    const [requestLoading, setRequestLoading] = useState<boolean>(false)
-    const [activeKey, setActiveKey] = useState<string>('')
-    const [openSearch, setOpenSearch] = useState<boolean>(false)
-    const [openReasoner, setOpenReasoner] = useState<boolean>(false)
-    const [model, setModel] = useState<string>(MODEL_CHAT)
+    const [activeConversationKey, setActiveConversationKey] = useState<string>('');
+    const [newConversationName, setNewConversationName] = useState<string>('');
+    const [openSearch, setOpenSearch] = useState<boolean>(false);
+    const [openReasoner, setOpenReasoner] = useState<boolean>(false);
+    const [model, setModel] = useState<string>(MODEL_CHAT);
     const modelRef = useRef(model);
     const abortControllerRef = useRef<AbortController>(null);
     const [collapsed, setCollapsed] = useState(false);
@@ -164,12 +166,13 @@ const ChatPage = () => {
 
     // 点击添加会话
     const clickAddConversation = () => {
-        setActiveKey('')
-        setMessages([])
+        setActiveConversationKey('')
+        setNewConversationName('')
     }
 
     // 添加会话
-    const addConversation = (msg: string) => {
+    const addConversation = async (msg: string) => {
+        /*
         setConversationsItems([
             {
                 key: `${conversationsItems.length + 1}`,
@@ -178,8 +181,90 @@ const ChatPage = () => {
             ...conversationsItems,
 
         ]);
-        setActiveKey(`${conversationsItems.length + 1}`);
+        setActiveConversationKey(`${conversationsItems.length + 1}`);
+        */
+
+        if (msg) {
+            let chatId: string = ''
+            const chatName = msg.length > 10 ? msg.substring(0, 10) : msg
+            const resp = await saveChatAPI({chatId , chatName})
+            if (resp.code === 200) {
+                // 初始化会话记录列表
+                await initConversations()
+            }
+        }
     };
+
+    /**
+     * 监听到有新的会话名称,则保存
+     */
+    useEffect(() => {
+        addConversation(newConversationName)
+    }, [newConversationName])
+
+    /**
+     * 初始化会话记录
+     */
+    const initConversations = async () => {
+        const resp = await queryChatPageAPI({
+            pageNum: 1, pageSize: 100, chatName: ''
+        })
+        if (resp.data) {
+           const initConversations: Conversation[] =  resp.data.list.map((item) =>  {
+               return {
+                   key: item.chatId,
+                   label: item.chatName,
+               }
+           });
+            setConversationsItems(initConversations)
+
+            if (initConversations.length > 0) {
+                handleSelectedConversation(initConversations[0].key)
+            }
+        }
+    }
+
+    /**
+     * 选中会话项
+     */
+    const handleSelectedConversation = (conversationKey: string) => {
+        setActiveConversationKey(conversationKey)
+        setNewConversationName('')
+    }
+
+    /**
+     * 保存会话名称
+     */
+    const saveConversation = async (key: string, label: string) => {
+        //console.log("onSaveConversation conversationKey:" + key)
+        const resp = await saveChatAPI({
+            chatId: key,
+            chatName: label,
+        })
+        if (resp.code == 200) {
+            await initConversations()
+        } else {
+            apiMessage.error(resp.message)
+        }
+    }
+
+    /**
+     * 删除会话记录
+     */
+    const deleteConversation = async (conversationKey: string) => {
+        if (conversationKey) {
+            const resp = await deleteChatAPI(conversationKey)
+            if (resp.code == 200) {
+                await initConversations()
+            } else {
+                apiMessage.error(resp.message)
+            }
+        }
+    }
+
+    useEffect( () => {
+        initConversations().then()
+    }, []);
 
 
     // 会话编辑
@@ -199,7 +284,8 @@ const ChatPage = () => {
         ],
         onClick: (menuInfo) => {
             menuInfo.domEvent.stopPropagation();
-            let updatedConversations: Conversation[];
+            //let updatedConversations: Conversation[];
+            let newLabel = '';
             // 重命名会话
             if (menuInfo.key === 'rename') {
                 Modal.confirm({
@@ -209,16 +295,20 @@ const ChatPage = () => {
                             placeholder="请输入新的会话名称"
                             defaultValue={conversation.label?.toString()}
                             onChange={(e) => {
-                                const newLabel = e.target.value;
-                                updatedConversations = conversationsItems.map((item) =>
+                                newLabel = e.target.value;
+                                /*updatedConversations = conversationsItems.map((item) =>
                                     item.key === conversation.key ? { ...item, label: newLabel } : item
-                                );
+                                );*/
+
                             }}
                         />
                     ),
-                    onOk: () => {
-                        setConversationsItems(updatedConversations);
-                        apiMessage.success('重命名成功');
+                    onOk: async () => {
+                        //setConversationsItems(updatedConversations);
+                        if (newLabel) {
+                            await saveConversation(conversation.key, newLabel)
+                            apiMessage.success('重命名成功');
+                        }
                     },
                     onCancel: () => {
                         apiMessage.info('取消重命名');
@@ -230,16 +320,17 @@ const ChatPage = () => {
                 Modal.confirm({
                     title: '永久删除对话',
                     content: '删除后，该对话不可恢复，确认删除吗？',
-                    onOk: () => {
-                        // 过滤掉当前选中的会话项
+                    onOk: async () => {
+                        /*// 过滤掉当前选中的会话项
                         const updatedConversations = conversationsItems.filter(
                             (item) => item.key !== conversation.key
                         );
                         setConversationsItems(updatedConversations);
-                        // 如果删除的是当前激活的会话，重置 activeKey
-                        if (activeKey === conversation.key) {
-                            setActiveKey(updatedConversations.length > 0 ? updatedConversations[0].key : '');
-                        }
+                        // 如果删除的是当前激活的会话，重置 activeConversationKey
+                        if (activeConversationKey === conversation.key) {
+                            setActiveConversationKey(updatedConversations.length > 0 ? updatedConversations[0].key : '');
+                        }*/
+                        await deleteConversation(conversation.key)
                         apiMessage.success('删除成功')
                     }
                 });
@@ -255,8 +346,8 @@ const ChatPage = () => {
                     className='px-12 overflow-y-auto'
                     items={conversationsItems}
                     menu={menuConfig}
-                    activeKey={activeKey}
-                    onActiveChange={setActiveKey}
+                    activeKey={activeConversationKey}
+                    onActiveChange={setActiveConversationKey}
                 />
             }
         </>
@@ -271,7 +362,7 @@ const ChatPage = () => {
     /**
      * 与大模型交互
      */
-    const [agent] = useXAgent({
+    const [agent] = useXAgent<string>({
         request: async (info, callbacks) => {
             const {message, messages} = info
             const {onUpdate, onSuccess, onError} = callbacks
@@ -404,11 +495,11 @@ const ChatPage = () => {
         }));
 
     // 发送消息
-    const handleSubmit = (msg: string) => {
+    const handleSubmit = async (msg: string) => {
         onRequest(msg);
         setInputTxt('');
         setRequestLoading(true);
-        if (!activeKey) {
+        if (!activeConversationKey) {
             addConversation(msg);
         }
     }

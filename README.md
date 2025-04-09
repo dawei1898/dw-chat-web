@@ -102,3 +102,7 @@ import 'highlight.js/styles/atom-one-light.css';
 ```shell
 npm install clipboard-polyfill
 ```
+
+```shell
+npm install use-immer
+```

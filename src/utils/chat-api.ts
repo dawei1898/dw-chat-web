@@ -31,8 +31,8 @@ export interface StreamChatParam {
     chatId: string;
     content: string;
     modelId?: string;
-    isReasoning?: boolean;
-    isSearch?: boolean;
+    openReasoning?: boolean;
+    openSearch?: boolean;
 }
 
 /**
@@ -43,9 +43,37 @@ export interface MessageVO {
     chatId: string;
     type: string;
     content: string;
+    reasoningContent?: string;
     voteType?: string;
     modelId?: string;
 }
+
+export type UserAgentMessage = {
+    type: 'user';
+    id: string;
+    content: string;
+    chatId?: string;
+    openReasoning?: boolean;
+    openSearch?: boolean;
+};
+
+export type AIAgentMessage = {
+    type: 'ai';
+    id: string;
+    content: string;
+    reasoningContent?: string;
+    chatId?: string;
+    voteType?: 'up' | 'down' | '';
+    loading?: boolean;
+    openReasoning?: boolean;
+    openSearch?: boolean;
+};
+
+export type AgentMessage = UserAgentMessage | AIAgentMessage;
+
+export type BubbleMessage = {
+    role: string;
+};
 
 
 /**
@@ -74,7 +102,7 @@ export const  queryChatPageAPI = async (param: RecordPageParam) => {
         body: JSON.stringify(param),
     }
     const response: ApiResponse<PageResult<ChatRecordVO>> = await fetch(url, options).then(resp => resp.json());
-    console.log('queryChatPageAPI response:', JSON.stringify(response));
+    //console.log('queryChatPageAPI response:', JSON.stringify(response));
     return response;
 }
 
@@ -92,7 +120,7 @@ export const  saveChatAPI = async (param: ChatRecord) => {
         body: JSON.stringify(param),
     }
     const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    console.log('saveChatAPI response:', JSON.stringify(response));
+    //console.log('saveChatAPI response:', JSON.stringify(response));
     return response;
 }
 
@@ -109,7 +137,7 @@ export const  deleteChatAPI = async (chatId: string) => {
         },
     }
     const response: ApiResponse<number> = await fetch(url, options).then(resp => resp.json());
-    console.log('deleteChatAPI response:', JSON.stringify(response));
+    //console.log('deleteChatAPI response:', JSON.stringify(response));
     return response;
 }
 
@@ -128,7 +156,7 @@ export const  queryMessageListAPI = async (chatId: string) => {
         },
     }
     const response: ApiResponse<MessageVO[]> = await fetch(url, options).then(resp => resp.json());
-    console.log('queryMessageListAPI response:', JSON.stringify(response));
+    //console.log('queryMessageListAPI response:', JSON.stringify(response));
     return response;
 }
 
@@ -144,9 +172,10 @@ export const  saveVoteAPI = async (param: VoteParam) => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify(param),
+
     }
     const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    console.log('saveVoteAPI response:', JSON.stringify(response));
+    //console.log('saveVoteAPI response:', JSON.stringify(response));
     return response;
 }
 

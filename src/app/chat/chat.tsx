@@ -1,6 +1,7 @@
 "use client"
 
 import React, {useEffect, useRef, useState} from 'react';
+import { useImmer } from 'use-immer';
 import dynamic from 'next/dynamic';
 import {
     Bubble,
@@ -9,7 +10,7 @@ import {
     Sender,
     useXAgent,
     useXChat,
-    XProvider
+    XProvider, XRequest
 } from "@ant-design/x";
 import {
     Button, GetProp, Space,
@@ -18,9 +19,9 @@ import {
     ThemeConfig, Flex, Modal, Input
 } from "antd";
 import {
-    CopyOutlined, DeleteOutlined,
+    CopyOutlined, DeleteOutlined, DislikeFilled,
     DislikeOutlined, EditOutlined,
-    GlobalOutlined, LikeOutlined,
+    GlobalOutlined, LikeFilled, LikeOutlined,
     NodeIndexOutlined, PaperClipOutlined,
     PlusOutlined
 } from "@ant-design/icons";
@@ -42,7 +43,20 @@ import {writeText} from "clipboard-polyfill";
 import {appConfig} from "@/utils/appConfig";
 import {avatarRender} from "@/app/chat/sidebar-avatar";
 import {ProLayout} from "@ant-design/pro-layout";
-import {deleteChatAPI, MessageVO, queryChatPageAPI, queryMessageListAPI, saveChatAPI} from "@/utils/chat-api";
+import {
+    AgentMessage,
+    AIAgentMessage,
+    deleteChatAPI,
+    MessageVO,
+    queryChatPageAPI,
+    queryMessageListAPI,
+    saveChatAPI,
+    saveVoteAPI,
+    StreamChatParam
+} from "@/utils/chat-api";
+import {getLoginUserCookie} from "@/app/actions";
+import {MessageInfo} from "@ant-design/x/es/use-x-chat";
+import options from "use-merge-value/.fatherrc";
 
 
 // 动态导入
@@ -53,18 +67,6 @@ import {deleteChatAPI, MessageVO, queryChatPageAPI, queryMessageListAPI, saveCha
 
 const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
 
-/**
- * DeepSeek大模型配置
- */
-const MODEL_CHAT = 'deepseek-chat'
-const MODEL_REASONER = 'deepseek-reasoner'
-
-const client = new OpenAI({
-    baseURL: appConfig.deepSeekBaseUrl,
-    apiKey: appConfig.deepSeekApiKey,
-    dangerouslyAllowBrowser: true,
-});
-
 
 const ChatPage = () => {
     const {token} = theme.useToken();
@@ -73,13 +75,13 @@ const ChatPage = () => {
     const [requestLoading, setRequestLoading] = useState<boolean>(false);
     const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
     const [activeConversationKey, setActiveConversationKey] = useState<string>('');
-    const [newConversationName, setNewConversationName] = useState<string>('');
     const [openSearch, setOpenSearch] = useState<boolean>(false);
-    const [openReasoner, setOpenReasoner] = useState<boolean>(false);
-    const [model, setModel] = useState<string>(MODEL_CHAT);
-    const modelRef = useRef(model);
-    const abortControllerRef = useRef<AbortController>(null);
+    const [openReasoning, setOpenReasoning] = useState<boolean>(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const [messageItems, updateMessageItems] = useImmer<BubbleDataType[]>([])
     const [collapsed, setCollapsed] = useState(false);
+    const [apiToken, setApiToken] = useState<string>('')
+
 
 
     // 主题配置
@@ -167,23 +169,11 @@ const ChatPage = () => {
     // 点击添加会话
     const clickAddConversation = () => {
         setActiveConversationKey('')
-        setNewConversationName('')
+        setMessages([])
     }
 
     // 添加会话
     const addConversation = async (msg: string) => {
-        /*
-        setConversationsItems([
-            {
-                key: `${conversationsItems.length + 1}`,
-                label: msg,
-            },
-            ...conversationsItems,
-
-        ]);
-        setActiveConversationKey(`${conversationsItems.length + 1}`);
-        */
-
         if (msg) {
             let chatId: string = ''
             const chatName = msg.length > 10 ? msg.substring(0, 10) : msg
@@ -191,16 +181,11 @@ const ChatPage = () => {
             if (resp.code === 200) {
                 // 初始化会话记录列表
                 await initConversations()
+                return resp.data;
             }
         }
     };
 
-    /**
-     * 监听到有新的会话名称,则保存
-     */
-    useEffect(() => {
-        addConversation(newConversationName)
-    }, [newConversationName])
 
     /**
      * 初始化会话记录
@@ -229,14 +214,12 @@ const ChatPage = () => {
      */
     const handleSelectedConversation = (conversationKey: string) => {
         setActiveConversationKey(conversationKey)
-        setNewConversationName('')
     }
 
     /**
      * 保存会话名称
      */
     const saveConversation = async (key: string, label: string) => {
-        //console.log("onSaveConversation conversationKey:" + key)
         const resp = await saveChatAPI({
             chatId: key,
             chatName: label,
@@ -284,7 +267,6 @@ const ChatPage = () => {
         ],
         onClick: (menuInfo) => {
             menuInfo.domEvent.stopPropagation();
-            //let updatedConversations: Conversation[];
             let newLabel = '';
             // 重命名会话
             if (menuInfo.key === 'rename') {
@@ -296,15 +278,10 @@ const ChatPage = () => {
                             defaultValue={conversation.label?.toString()}
                             onChange={(e) => {
                                 newLabel = e.target.value;
-                                /*updatedConversations = conversationsItems.map((item) =>
-                                    item.key === conversation.key ? { ...item, label: newLabel } : item
-                                );*/
-
                             }}
                         />
                     ),
                     onOk: async () => {
-                        //setConversationsItems(updatedConversations);
                         if (newLabel) {
                             await saveConversation(conversation.key, newLabel)
                             apiMessage.success('重命名成功');
@@ -321,15 +298,6 @@ const ChatPage = () => {
                     title: '永久删除对话',
                     content: '删除后，该对话不可恢复，确认删除吗？',
                     onOk: async () => {
-                        /*// 过滤掉当前选中的会话项
-                        const updatedConversations = conversationsItems.filter(
-                            (item) => item.key !== conversation.key
-                        );
-                        setConversationsItems(updatedConversations);
-                        // 如果删除的是当前激活的会话，重置 activeConversationKey
-                        if (activeConversationKey === conversation.key) {
-                            setActiveConversationKey(updatedConversations.length > 0 ? updatedConversations[0].key : '');
-                        }*/
                         await deleteConversation(conversation.key)
                         apiMessage.success('删除成功')
                     }
@@ -359,100 +327,167 @@ const ChatPage = () => {
     }
 
 
-    /**
-     * 与大模型交互
-     */
-    const [agent] = useXAgent<string>({
-        request: async (info, callbacks) => {
-            const {message, messages} = info
-            const {onUpdate, onSuccess, onError} = callbacks
-            console.log('message', message)
-            console.log('message list', messages)
-            console.log('model:', modelRef.current)
-
-            let content = ''
-            let reasoningContent: string = '==========  思考开始  ==========\n'
-            let reasoningOver: boolean = false
+    useEffect(() => {
+        const fetchLoginUser = async () => {
             try {
-                const streamCompletions = await client.chat.completions.create({
-                        model: modelRef.current,
-                        messages: [{role: 'user', content: message || ''}],
-                        stream: true
-                    },
-                    {
-                        signal: abortControllerRef.current?.signal, // 控制停止
-                    });
-                for await (let chunk of streamCompletions) {
-                    setRequestLoading(false);
-                    const reasoning_content: string = (chunk.choices[0]?.delta as any)?.reasoning_content
-                    const resp_content: any = chunk.choices[0]?.delta?.content
-
-                    // 思考中
-                    if (reasoning_content) {
-                        reasoningContent += reasoning_content;
-                        content = reasoningContent;
-                    }
-                    // 思考结束
-                    else if (modelRef.current === MODEL_REASONER
-                        && resp_content && !reasoningOver) {
-                        reasoningContent += '\n==========  思考结束  ==========\n\n\n';
-                        content = reasoningContent;
-                        reasoningOver = true;
-                        console.log('思考结束。')
-                    }
-                    // 回答
-                    if (resp_content) {
-                        content += resp_content;
-                    }
-                    onUpdate(content);
-                }
-
-                onSuccess(content);
-            } catch (e) {
-                console.log('error', e);
-                onError(e as Error);
-            } finally {
-                setRequestLoading(false);
+                const loginUser = await getLoginUserCookie();
+                setApiToken(loginUser?.token || '');
+            } catch (error) {
+                console.error('Failed to fetch login user:', error);
             }
+        };
+        fetchLoginUser();
+    }, []);
+
+    // 模型连接信息
+    const xRequest = XRequest({
+        baseURL:  `${appConfig.apiBaseUrl}/chat/streamChat`,
+        //baseURL:  `http://localhost:9500/chat/streamChat`,
+        //dangerouslyApiKey: `Bearer ${apiToken}`,
+        fetch: (url, options) => {
+            return fetch(url, {
+                ...options,
+                headers: options?.headers,
+                signal: abortControllerRef.current?.signal, // 控制停止
+            })
         }
     });
 
+    /**
+     * 与大模型交互
+     */
+    const [agent] = useXAgent<AgentMessage>({
+        request: async (info, callbacks) => {
+            const {message, messages} = info
+            const {onUpdate: onAgentUpdate, onSuccess: onAgentSuccess, onError: onAgentError} = callbacks;
+            console.log('message', message)
+            console.log('message list:', JSON.stringify(messages))
+
+            const aiMessage: AIAgentMessage = {
+                type: 'ai',
+                loading: true,
+                id: '',
+                content: '',
+                reasoningContent: message?.openReasoning ? '==========  思考开始  ==========\n' : '',
+            }
+            let reasoningOver: boolean = false
+            await xRequest.create<StreamChatParam, MessageVO>(
+                {
+                    chatId: message?.chatId || '',
+                    content: message?.content || '',
+                    openReasoning: message?.openReasoning,
+                    openSearch: message?.openSearch,
+                },
+                {
+                    onUpdate: (chunk) => {
+                        try {
+                            setRequestLoading(false);
+                            //console.log('onUpdate', JSON.stringify(chunk));
+                            const data: MessageVO = JSON.parse(chunk.data);
+
+                            const reasoning_content: string = data.reasoningContent || ''
+                            const resp_content: any = data.content || ''
+
+                            // 思考中
+                            if (reasoning_content) {
+                                if (!aiMessage.reasoningContent) {
+                                    aiMessage.reasoningContent =  '==========  思考开始  ==========\n'
+                                }
+                                aiMessage.reasoningContent += reasoning_content;
+                                aiMessage.content = aiMessage.reasoningContent || '';
+                            }
+                            // 思考结束
+                            else if (message?.openReasoning && resp_content && !reasoningOver) {
+                                aiMessage.reasoningContent += '\n==========  思考结束  ==========\n\n\n';
+                                aiMessage.content = aiMessage.reasoningContent || '';
+                                reasoningOver = true;
+                                console.log('思考结束。')
+                            }
+                            // 回答
+                            if (resp_content) {
+                                aiMessage.content += resp_content;
+                            }
+                            onAgentUpdate(aiMessage);
+                        } catch (e) {
+                            console.log('onUpdate fail：', e);
+                        }
+                    },
+                    onSuccess: (chunk) => {
+                        //console.log('onSuccess， chunk：', JSON.stringify(chunk));
+                        console.log('onSuccess， aiMessage：', JSON.stringify(aiMessage));
+                        onAgentSuccess(aiMessage);
+                    },
+                    onError: (error) => {
+                        console.log('onError', error);
+                        onAgentError(error);
+                        setRequestLoading(false);
+                    },
+                },
+            )
+        }
+    })
+
     const {onRequest, messages, setMessages} = useXChat({
         agent: agent,
-        requestPlaceholder: '请求中...',
+        requestPlaceholder: {
+            id: '1',
+            type: 'ai',
+            content: '请求中...',
+        },
+        /*defaultMessages: [
+            {
+                id: 'init',
+                status: 'success',
+                message: {
+                    type: 'ai',
+                    id: '11',
+                    content: 'Hello, what can I do for you?',
+                },
+            },
+        ],*/
     });
 
-    useEffect(() => {
-        const newModel = openReasoner ? MODEL_REASONER : MODEL_CHAT;
-        setModel(newModel)
-        modelRef.current = newModel
-        console.log('set model:', newModel)
-    }, [openReasoner]);
+    /**
+     * 消息点赞
+     */
+    const msgLike = async (message: AIAgentMessage) => {
+        message.voteType = message.voteType === 'up' ? '' : 'up'
+        await saveVoteAPI({'contentId': message.id, 'voteType': message.voteType})
+        if (message.voteType === 'up') {
+            apiMessage.success('感谢您的支持')
+        }
+    }
 
-    useEffect(() => {
-        modelRef.current = model;
-    }, [model]);
+    /**
+     * 消息点踩
+     */
+    const msgDislike = async (message: AIAgentMessage) => {
+        message.voteType = message.voteType === 'down' ? '' : 'down'
+        await saveVoteAPI({'contentId': message.id, 'voteType': message.voteType})
+        if (message.voteType === 'down') {
+            apiMessage.info('感谢您的反馈')
+        }
+    }
 
-
-    const MessageFooter = (props: {message: string}) => {
+    const MessageFooter = ({message}: {message:AIAgentMessage}) => {
         return <Space>
             <Tooltip title='喜欢'>
                 <Button
-                    size={'small'} type={'text'} icon={<LikeOutlined/>}
-                    onClick={() => apiMessage.success('感谢您的支持')}
+                    size={'small'} type={'text'} icon={message.voteType === 'up' ? <LikeFilled/> : <LikeOutlined/>}
+                    onClick={() => msgLike(message)}
                 />
             </Tooltip>
             <Tooltip title='不喜欢'>
                 <Button
-                    size={'small'} type={'text'} icon={<DislikeOutlined/>}
-                    onClick={() => apiMessage.info('感谢您的反馈')}
+                    size={'small'} type={'text'} icon={message.voteType === 'down' ? <DislikeFilled /> : <DislikeOutlined/>}
+                    onClick={() =>  msgDislike(message)}
                 />
             </Tooltip>
             <Tooltip title='复制'>
                 <Button
                     size={'small'} type={'text'} icon={<CopyOutlined/>}
                     onClick={() => {
-                        writeText(props.message);
+                        writeText(message.content);
                         apiMessage.success('已复制');
                     }}
                 />
@@ -468,7 +503,7 @@ const ChatPage = () => {
             variant: 'outlined',
             avatar: {icon: <DeepSeekIcon/>, style: {border: '1px solid #c5eaee', backgroundColor: 'white'}},
             //footer: !agent.isRequesting() && MessageFooter,
-            typing: {step: 5, interval: 50},
+            typing: (messages[0]?.status === 'loading') && {step: 5, interval: 50},
             messageRender: (content) => (<MarkdownRender content={content}/>),
             style: {
                 maxWidth: 700,
@@ -482,33 +517,81 @@ const ChatPage = () => {
         },
     };
 
-    const messageItems = messages.map((
-        {id, message, status}) =>
-        ({
-            key: id,
-            content: message,
-            role: status === 'local' ? 'user' : 'ai',
-            loading: status === 'loading' && requestLoading,
-            footer: ((!agent.isRequesting() && status !== 'local') &&
-                <MessageFooter message={message}/>
-            ),
-        }));
-
-    // 发送消息
-    const handleSubmit = async (msg: string) => {
-        onRequest(msg);
-        setInputTxt('');
-        setRequestLoading(true);
-        if (!activeConversationKey) {
-            addConversation(msg);
-        }
-    }
-
-    const finalMessageItems: BubbleDataType[] = messageItems.length > 0 ? messageItems
-        : [{
-            content: (<InitWelcome handleSubmit={handleSubmit}/>),
+    useEffect(() => {
+        const finalMessageItems: BubbleDataType[] = messages.length > 0
+            ? messages.map((
+            {id, message, status}) =>
+            ({
+                key: message.id,
+                role: message.type,
+                content: message.content,
+                loading: status === 'loading' && requestLoading,
+                footer: ((!agent.isRequesting() && message.type === 'ai') &&
+                    <MessageFooter message={message as AIAgentMessage}/>
+                ),
+                placement: message.type === 'ai' ? 'start' : 'end',
+                variant: message.type === 'ai' ? 'outlined' : undefined,
+                avatar: message.type === 'ai' ?
+                    {icon: <DeepSeekIcon/>, style: {border: '1px solid #c5eaee', backgroundColor: 'white'}} : undefined,
+                typing: message.type === 'ai' && message.loading ?
+                    {step: 5, interval: 50} : undefined,
+                style: message.type === 'ai' ? { maxWidth: 700 } : undefined,
+                messageRender: message.type === 'ai' ?
+                    ((content) => (<MarkdownRender content={content}/>)) : undefined,
+            }))
+            : [{
+            content: (<InitWelcome handleSubmit={handleSubmitMsg}/>),
             variant: 'borderless'
         }];
+        updateMessageItems(finalMessageItems);
+    }, [messages]);
+
+
+    /**
+     * 查询消息列表
+     */
+    const queryMessageList = async (conversationKey: string) => {
+        if (!conversationKey) {
+            return
+        }
+        const resp = await queryMessageListAPI(conversationKey)
+        const msgs: MessageInfo<AgentMessage>[] =  resp.data.map((item) => ({
+            id: item.msgId,
+            status: item.type === 'user' ? 'local' : 'success',
+            message: {
+                type: item.type,
+                id: item.msgId,
+                content: item.content,
+                chatId: item.chatId,
+                voteType: item.voteType,
+            }
+        }))
+        setMessages(msgs)
+    }
+
+    useEffect(() => {
+        console.log('activeConversationKey:', activeConversationKey)
+        queryMessageList(activeConversationKey)
+    }, [activeConversationKey]);
+
+
+    // 发送消息
+    const handleSubmitMsg = async (msg: string) => {
+        setInputTxt('');
+        setRequestLoading(true);
+        let chatId;
+        if (!activeConversationKey) {
+            chatId = await addConversation(msg);
+        }
+        onRequest({
+            type: 'user',
+            id: Date.now().toString(),
+            chatId: chatId ? chatId : activeConversationKey,
+            content: msg,
+            openReasoning: openReasoning,
+            openSearch: openSearch,
+        });
+    }
 
     /* 自定义发送框底部 */
     const senderFooter =  ({components}: any) => {
@@ -518,14 +601,14 @@ const ChatPage = () => {
             <Flex justify='space-between' align='center'>
                 <Flex gap='small'>
                     <Tooltip
-                        title={openReasoner ? '' : '调用新模型 DeepSeek-R1，解决推理问题'}
+                        title={openReasoning ? '' : '调用新模型 DeepSeek-R1，解决推理问题'}
                         placement='left'
                     >
                         <Button
                             size='small'
                             shape='round'
-                            type={openReasoner ? 'primary' : 'default'}
-                            onClick={() => setOpenReasoner(!openReasoner)}
+                            type={openReasoning ? 'primary' : 'default'}
+                            onClick={() => setOpenReasoning(!openReasoning)}
                         >
                             <NodeIndexOutlined />
                             深度思考(R1)
@@ -576,16 +659,17 @@ const ChatPage = () => {
     // 停止
     const handleCancel = () => {
         setRequestLoading(false);
-        abortControllerRef.current?.abort('停止');
+        abortControllerRef.current?.abort('手动停止');
         apiMessage.error('已停止')
     }
 
     // 通过 useEffect 清理函数自动取消未完成的请求：
     useEffect(() => {
-        abortControllerRef.current = new AbortController();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
         return () => {
-            abortControllerRef.current?.abort('停止');
-        }
+            controller.abort('组件卸载，取消请求');
+        };
     }, []);
 
     return (
@@ -625,8 +709,8 @@ const ChatPage = () => {
                     >
                         {/* 消息列表 */}
                         <Bubble.List
-                            roles={roles}
-                            items={finalMessageItems}
+                            //roles={roles}
+                            items={messageItems}
                         />
 
                         {/* 输入框 */}
@@ -637,7 +721,7 @@ const ChatPage = () => {
                             loading={agent.isRequesting()}
                             value={inputTxt}
                             onChange={setInputTxt}
-                            onSubmit={handleSubmit}
+                            onSubmit={handleSubmitMsg}
                             onCancel={handleCancel}
                             actions={false}
                             footer={senderFooter}

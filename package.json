@@ -21,7 +21,8 @@
     "next": "15.2.4",
     "openai": "^4.85.4",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "use-immer": "^0.11.0"
   },
   "devDependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",

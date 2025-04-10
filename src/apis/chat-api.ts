@@ -1,5 +1,5 @@
 import {appConfig} from "@/utils/appConfig";
-import type {ApiResponse, PageParam, PageResult} from "@/utils/index";
+import type {ApiResponse, PageParam, PageResult} from "@/apis/index";
 
 
 /**
@@ -103,7 +103,11 @@ export const  queryChatPageAPI = async (param: RecordPageParam) => {
         body: JSON.stringify(param),
     }
     const response: ApiResponse<PageResult<ChatRecordVO>> = await fetch(url, options).then(resp => resp.json());
-    //console.log('queryChatPageAPI response:', JSON.stringify(response));
+    if (response.code === 401) {
+        console.log('鉴权失败 401')
+        window.location.href = '/login'; // 统一跳转到登录页
+        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
+    }
     return response;
 }
 
@@ -121,7 +125,11 @@ export const  saveChatAPI = async (param: ChatRecord) => {
         body: JSON.stringify(param),
     }
     const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    //console.log('saveChatAPI response:', JSON.stringify(response));
+    if (response.code === 401) {
+        console.log('鉴权失败 401')
+        window.location.href = '/login'; // 统一跳转到登录页
+        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
+    }
     return response;
 }
 
@@ -138,7 +146,11 @@ export const  deleteChatAPI = async (chatId: string) => {
         },
     }
     const response: ApiResponse<number> = await fetch(url, options).then(resp => resp.json());
-    //console.log('deleteChatAPI response:', JSON.stringify(response));
+    if (response.code === 401) {
+        console.log('鉴权失败 401')
+        window.location.href = '/login'; // 统一跳转到登录页
+        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
+    }
     return response;
 }
 
@@ -157,7 +169,11 @@ export const  queryMessageListAPI = async (chatId: string) => {
         },
     }
     const response: ApiResponse<MessageVO[]> = await fetch(url, options).then(resp => resp.json());
-    //console.log('queryMessageListAPI response:', JSON.stringify(response));
+    if (response.code === 401) {
+        console.log('鉴权失败 401')
+        window.location.href = '/login'; // 统一跳转到登录页
+        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
+    }
     return response;
 }
 
@@ -176,7 +192,11 @@ export const  saveVoteAPI = async (param: VoteParam) => {
 
     }
     const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    //console.log('saveVoteAPI response:', JSON.stringify(response));
+    if (response.code === 401) {
+        console.log('鉴权失败 401')
+        window.location.href = '/login'; // 统一跳转到登录页
+        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
+    }
     return response;
 }
 

@@ -3,7 +3,7 @@ import {ProLayoutProps} from "@ant-design/pro-components";
 import {LogoutOutlined, SettingOutlined, UserOutlined} from "@ant-design/icons";
 import {cleanLoginUserCookie, getLoginUserCookie} from "@/app/actions";
 import {useRouter} from "next/navigation";
-import {logoutAPI} from "@/utils/user-api";
+import {logoutAPI} from "@/apis/user-api";
 import {type AvatarProps, Dropdown, MenuProps, message} from "antd";
 
 

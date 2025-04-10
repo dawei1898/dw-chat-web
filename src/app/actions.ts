@@ -1,7 +1,7 @@
 'use server';
 
 import {cookies} from 'next/headers';
-import {LoginUser} from "@/utils/user-api";
+import {LoginUser} from "@/apis/user-api";
 import {COOKIE_LOGIN_USER} from "@/utils/constant";
 
 /**

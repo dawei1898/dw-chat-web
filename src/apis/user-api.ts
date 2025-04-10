@@ -1,5 +1,6 @@
 import {appConfig} from "@/utils/appConfig";
-import type {ApiResponse} from "@/utils/index";
+import type {ApiResponse} from "@/apis/index";
+import fetchWithAuth from "@/apis/fetch-with-auth";
 
 /**
  * 注册参数
@@ -87,7 +88,11 @@ export const logoutAPI = async () => {
         },
     }
     const response: ApiResponse<void> = await fetch(url, options).then(resp => resp.json());
-    //console.log('logoutAPI response:', JSON.stringify(response));
+    if (response.code === 401) {
+        console.log('鉴权失败 401')
+        window.location.href = '/login'; // 统一跳转到登录页
+        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
+    }
     return response;
 }
 
@@ -104,6 +109,10 @@ export const queryUserAPI = async () => {
         },
     }
     const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    //console.log('queryUserAPI response:', JSON.stringify(response));
+    if (response.code === 401) {
+        console.log('鉴权失败 401')
+        window.location.href = '/login'; // 统一跳转到登录页
+        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
+    }
     return response;
 }

@@ -16,7 +16,8 @@ import {
     Button, GetProp, Space,
     message as apiMessage,
     Tooltip, theme,
-    ThemeConfig, Flex, Modal, Input, Typography
+    ThemeConfig, Flex,
+    Modal, Input, Typography
 } from "antd";
 import {
     CopyOutlined, DeleteOutlined, DislikeFilled,
@@ -26,7 +27,6 @@ import {
     PlusOutlined, UpOutlined
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
-import OpenAI from "openai";
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";
 import MarkdownRender from "@/app/chat/markdown-render";
 import InitWelcome from "@/app/chat/init-welcome";
@@ -53,10 +53,9 @@ import {
     saveChatAPI,
     saveVoteAPI,
     StreamChatParam
-} from "@/utils/chat-api";
+} from "@/apis/chat-api";
 import {getLoginUserCookie} from "@/app/actions";
 import {MessageInfo} from "@ant-design/x/es/use-x-chat";
-import options from "use-merge-value/.fatherrc";
 
 
 // 动态导入
@@ -331,7 +330,7 @@ const ChatPage = () => {
 
     // 模型连接信息
     const xRequest = XRequest({
-        //baseURL: `${appConfig.apiBaseUrl}/chat/streamChat`,
+        //baseURL: `/sse/api/chat/streamChat`,
         baseURL:  `http://localhost:9500/chat/streamChat`,
         fetch: async (url, options) => {
             return  fetch(url, {

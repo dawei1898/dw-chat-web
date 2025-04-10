@@ -19,7 +19,7 @@ import {
 import {useRouter} from "next/navigation";
 import Logo from "@/app/chat/logo";
 import {appConfig} from "@/utils/appConfig";
-import {loginAPI} from "@/utils/user-api";
+import {loginAPI} from "@/apis/user-api";
 import {setLoginUserCookie} from "@/app/actions";
 
 

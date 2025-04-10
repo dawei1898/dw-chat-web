@@ -95,8 +95,11 @@ const ChatPage = () => {
         pageContainer: {
             colorBgPageContainer: dark ? '' : token.colorBgBase,
             paddingBlockPageContainerContent: 10,  // 上下内距离
-            paddingInlinePageContainerContent: 10, // 左右内距离
+            paddingInlinePageContainerContent: 5, // 左右内距离
         },
+        sider: {
+            paddingInlineLayoutMenu: 2,
+        }
     }
 
     /* 侧边栏触发器 */
@@ -308,13 +311,15 @@ const ChatPage = () => {
     const conversationRender = (props: SiderMenuProps, defaultDom: React.ReactNode) => {
         return <>
             {!props.collapsed &&
-                <Conversations
-                    className='px-12 overflow-y-auto'
-                    items={conversationsItems}
-                    menu={menuConfig}
-                    activeKey={activeConversationKey}
-                    onActiveChange={setActiveConversationKey}
-                />
+                <div className='h-full px-1 overflow-y-auto scrollbar-container'>
+                    <Conversations
+                        items={conversationsItems}
+                        menu={menuConfig}
+                        activeKey={activeConversationKey}
+                        onActiveChange={setActiveConversationKey}
+                    />
+                </div>
+
             }
         </>
     }
@@ -549,10 +554,8 @@ const ChatPage = () => {
                     messageRender: message.type === 'ai' ?
                         ((content) => (<MarkdownRender content={content}/>)) : undefined,
                 }))
-            : [{
-                content: (<InitWelcome handleSubmit={handleSubmitMsg}/>),
-                variant: 'borderless'
-            }];
+            : [{ content: (<InitWelcome handleSubmit={handleSubmitMsg}/>),
+                variant: 'borderless' }];
         updateMessageItems(finalMessageItems);
     }, [messages]);
 
@@ -715,31 +718,35 @@ const ChatPage = () => {
                 <Flex
                     vertical
                     gap={'large'}
-                    className='w-full max-w-2xl'
+                    className='w-full'
                     style={{margin: '0px auto', height: '94.5vh'}}
                 >
                     {/* 消息列表 */}
-                    <Bubble.List
-                        items={messageItems}
-                    />
+                    <div className='h-full w-full px-1 overflow-y-auto scrollbar-container'>
+                        <Bubble.List
+                            className='max-w-2xl  mx-auto'
+                            items={messageItems}
+                        />
+                    </div>
 
-                    {/* 输入框 */}
-                    <Sender
-                        style={{marginTop: 'auto', borderRadius: '20px'}}
-                        autoSize={{minRows: 2, maxRows: 8}}
-                        placeholder='请输入你的问题...'
-                        loading={agent.isRequesting()}
-                        value={inputTxt}
-                        onChange={setInputTxt}
-                        onSubmit={handleSubmitMsg}
-                        onCancel={handleCancel}
-                        actions={false}
-                        footer={senderFooter}
-                    />
+                        {/* 输入框 */}
+                        <Sender
+                            className='max-w-2xl mx-auto'
+                            style={{marginTop: 'auto', borderRadius: '20px'}}
+                            autoSize={{minRows: 2, maxRows: 8}}
+                            placeholder='请输入你的问题...'
+                            loading={agent.isRequesting()}
+                            value={inputTxt}
+                            onChange={setInputTxt}
+                            onSubmit={handleSubmitMsg}
+                            onCancel={handleCancel}
+                            actions={false}
+                            footer={senderFooter}
+                        />
                 </Flex>
             </ProLayout>
         </XProvider>
-    );
+);
 };
 
 export default ChatPage;

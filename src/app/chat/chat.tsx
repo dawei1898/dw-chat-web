@@ -1,7 +1,7 @@
 "use client"
 
 import React, {useEffect, useRef, useState} from 'react';
-import { useImmer } from 'use-immer';
+import {useImmer} from 'use-immer';
 import dynamic from 'next/dynamic';
 import {
     Bubble,
@@ -16,14 +16,14 @@ import {
     Button, GetProp, Space,
     message as apiMessage,
     Tooltip, theme,
-    ThemeConfig, Flex, Modal, Input
+    ThemeConfig, Flex, Modal, Input, Typography
 } from "antd";
 import {
     CopyOutlined, DeleteOutlined, DislikeFilled,
-    DislikeOutlined, EditOutlined,
+    DislikeOutlined, DownOutlined, EditOutlined,
     GlobalOutlined, LikeFilled, LikeOutlined,
     NodeIndexOutlined, PaperClipOutlined,
-    PlusOutlined
+    PlusOutlined, UpOutlined
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import OpenAI from "openai";
@@ -83,7 +83,6 @@ const ChatPage = () => {
     const [apiToken, setApiToken] = useState<string>('')
 
 
-
     // 主题配置
     const customTheme: ThemeConfig = {
         algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
@@ -110,7 +109,7 @@ const ChatPage = () => {
             <Button
                 styles={{icon: {color: '#676767'}}}
                 type='text'
-                icon={collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+                icon={collapsed ? <PanelLeftOpen/> : <PanelLeftClose/>}
                 onClick={() => setCollapsed(!collapsed)}
             />
         </Tooltip>
@@ -177,7 +176,7 @@ const ChatPage = () => {
         if (msg) {
             let chatId: string = ''
             const chatName = msg.length > 10 ? msg.substring(0, 10) : msg
-            const resp = await saveChatAPI({chatId , chatName})
+            const resp = await saveChatAPI({chatId, chatName})
             if (resp.code === 200) {
                 // 初始化会话记录列表
                 await initConversations()
@@ -195,12 +194,12 @@ const ChatPage = () => {
             pageNum: 1, pageSize: 100, chatName: ''
         })
         if (resp.data) {
-           const initConversations: Conversation[] =  resp.data.list.map((item) =>  {
-               return {
-                   key: item.chatId,
-                   label: item.chatName,
-               }
-           });
+            const initConversations: Conversation[] = resp.data.list.map((item) => {
+                return {
+                    key: item.chatId,
+                    label: item.chatName,
+                }
+            });
             setConversationsItems(initConversations)
 
             if (initConversations.length > 0) {
@@ -245,7 +244,7 @@ const ChatPage = () => {
         }
     }
 
-    useEffect( () => {
+    useEffect(() => {
         initConversations().then()
     }, []);
 
@@ -256,12 +255,12 @@ const ChatPage = () => {
             {
                 label: '重命名',
                 key: 'rename',
-                icon: <EditOutlined />,
+                icon: <EditOutlined/>,
             },
             {
                 label: '删除',
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <DeleteOutlined/>,
                 danger: true,
             },
         ],
@@ -341,7 +340,7 @@ const ChatPage = () => {
 
     // 模型连接信息
     const xRequest = XRequest({
-        baseURL:  `${appConfig.apiBaseUrl}/chat/streamChat`,
+        baseURL: `${appConfig.apiBaseUrl}/chat/streamChat`,
         //baseURL:  `http://localhost:9500/chat/streamChat`,
         //dangerouslyApiKey: `Bearer ${apiToken}`,
         fetch: (url, options) => {
@@ -366,11 +365,11 @@ const ChatPage = () => {
             const aiMessage: AIAgentMessage = {
                 type: 'ai',
                 loading: true,
+                chatId: '',
                 id: '',
                 content: '',
-                reasoningContent: message?.openReasoning ? '==========  思考开始  ==========\n' : '',
+                reasoningContent: '',
             }
-            let reasoningOver: boolean = false
             await xRequest.create<StreamChatParam, MessageVO>(
                 {
                     chatId: message?.chatId || '',
@@ -385,23 +384,14 @@ const ChatPage = () => {
                             //console.log('onUpdate', JSON.stringify(chunk));
                             const data: MessageVO = JSON.parse(chunk.data);
 
+                            aiMessage.id = data.msgId
+                            aiMessage.chatId = data.chatId
+
                             const reasoning_content: string = data.reasoningContent || ''
                             const resp_content: any = data.content || ''
-
                             // 思考中
                             if (reasoning_content) {
-                                if (!aiMessage.reasoningContent) {
-                                    aiMessage.reasoningContent =  '==========  思考开始  ==========\n'
-                                }
                                 aiMessage.reasoningContent += reasoning_content;
-                                aiMessage.content = aiMessage.reasoningContent || '';
-                            }
-                            // 思考结束
-                            else if (message?.openReasoning && resp_content && !reasoningOver) {
-                                aiMessage.reasoningContent += '\n==========  思考结束  ==========\n\n\n';
-                                aiMessage.content = aiMessage.reasoningContent || '';
-                                reasoningOver = true;
-                                console.log('思考结束。')
                             }
                             // 回答
                             if (resp_content) {
@@ -447,6 +437,50 @@ const ChatPage = () => {
         ],*/
     });
 
+
+    /**
+     * 思考过程
+     */
+    const MessageHeader = ({message}: { message: AIAgentMessage }) => {
+        const [open, setOpen] = useState<boolean>(true)
+
+        return (message.reasoningContent &&
+            <Flex vertical>
+                <Button
+                    style={{
+                        width: '130px',
+                        marginBottom: '5px',
+                        borderRadius: token.borderRadiusLG,
+                    }}
+                    color="default"
+                    variant="filled"
+                    onClick={() => setOpen(!open)}
+                >
+                    <NodeIndexOutlined/>
+                    {'深度思考'}
+                    {open ? <UpOutlined style={{fontSize: '10px'}}/>
+                        : <DownOutlined style={{fontSize: '10px'}}/>}
+                </Button>
+                {open &&
+                    <div className='border-l-2 my-2 mr-2 pl-4'>
+                        <Bubble
+                            content={message.reasoningContent}
+                            variant='borderless'
+                            typing={message.loading && {step: 5, interval: 50}}
+                            style={{maxWidth: 600}}
+                            messageRender={(content) =>
+                                <Typography.Text type='secondary'>
+                                    {content}
+                                </Typography.Text>
+                            }
+                        />
+                    </div>
+                }
+
+            </Flex>
+        )
+    }
+
     /**
      * 消息点赞
      */
@@ -469,7 +503,7 @@ const ChatPage = () => {
         }
     }
 
-    const MessageFooter = ({message}: {message:AIAgentMessage}) => {
+    const MessageFooter = ({message}: { message: AIAgentMessage }) => {
         return <Space>
             <Tooltip title='喜欢'>
                 <Button
@@ -479,8 +513,9 @@ const ChatPage = () => {
             </Tooltip>
             <Tooltip title='不喜欢'>
                 <Button
-                    size={'small'} type={'text'} icon={message.voteType === 'down' ? <DislikeFilled /> : <DislikeOutlined/>}
-                    onClick={() =>  msgDislike(message)}
+                    size={'small'} type={'text'}
+                    icon={message.voteType === 'down' ? <DislikeFilled/> : <DislikeOutlined/>}
+                    onClick={() => msgDislike(message)}
                 />
             </Tooltip>
             <Tooltip title='复制'>
@@ -520,29 +555,33 @@ const ChatPage = () => {
     useEffect(() => {
         const finalMessageItems: BubbleDataType[] = messages.length > 0
             ? messages.map((
-            {id, message, status}) =>
-            ({
-                key: message.id,
-                role: message.type,
-                content: message.content,
-                loading: status === 'loading' && requestLoading,
-                footer: ((!agent.isRequesting() && message.type === 'ai') &&
-                    <MessageFooter message={message as AIAgentMessage}/>
-                ),
-                placement: message.type === 'ai' ? 'start' : 'end',
-                variant: message.type === 'ai' ? 'outlined' : undefined,
-                avatar: message.type === 'ai' ?
-                    {icon: <DeepSeekIcon/>, style: {border: '1px solid #c5eaee', backgroundColor: 'white'}} : undefined,
-                typing: message.type === 'ai' && message.loading ?
-                    {step: 5, interval: 50} : undefined,
-                style: message.type === 'ai' ? { maxWidth: 700 } : undefined,
-                messageRender: message.type === 'ai' ?
-                    ((content) => (<MarkdownRender content={content}/>)) : undefined,
-            }))
+                {id, message, status}) =>
+                ({
+                    key: message.id,
+                    role: message.type,
+                    header: (message.type === 'ai' && <MessageHeader message={message as AIAgentMessage}/>),
+                    content: message.content,
+                    footer: ((!agent.isRequesting() && message.type === 'ai') &&
+                        <MessageFooter message={message as AIAgentMessage}/>
+                    ),
+                    loading: status === 'loading' && requestLoading,
+                    placement: message.type === 'ai' ? 'start' : 'end',
+                    variant: message.type === 'ai' ? 'outlined' : undefined,
+                    avatar: message.type === 'ai' ?
+                        {
+                            icon: <DeepSeekIcon/>,
+                            style: {border: '1px solid #c5eaee', backgroundColor: 'white'}
+                        } : undefined,
+                    typing: message.type === 'ai' && message.loading ?
+                        {step: 5, interval: 50} : undefined,
+                    style: message.type === 'ai' ? {maxWidth: 700} : undefined,
+                    messageRender: message.type === 'ai' ?
+                        ((content) => (<MarkdownRender content={content}/>)) : undefined,
+                }))
             : [{
-            content: (<InitWelcome handleSubmit={handleSubmitMsg}/>),
-            variant: 'borderless'
-        }];
+                content: (<InitWelcome handleSubmit={handleSubmitMsg}/>),
+                variant: 'borderless'
+            }];
         updateMessageItems(finalMessageItems);
     }, [messages]);
 
@@ -555,13 +594,14 @@ const ChatPage = () => {
             return
         }
         const resp = await queryMessageListAPI(conversationKey)
-        const msgs: MessageInfo<AgentMessage>[] =  resp.data.map((item) => ({
+        const msgs: MessageInfo<AgentMessage>[] = resp.data.map((item) => ({
             id: item.msgId,
             status: item.type === 'user' ? 'local' : 'success',
             message: {
                 type: item.type,
                 id: item.msgId,
                 content: item.content,
+                reasoningContent: item.reasoningContent,
                 chatId: item.chatId,
                 voteType: item.voteType,
             }
@@ -594,7 +634,7 @@ const ChatPage = () => {
     }
 
     /* 自定义发送框底部 */
-    const senderFooter =  ({components}: any) => {
+    const senderFooter = ({components}: any) => {
         const {SendButton, LoadingButton, SpeechButton} = components;
 
         return (
@@ -610,7 +650,7 @@ const ChatPage = () => {
                             type={openReasoning ? 'primary' : 'default'}
                             onClick={() => setOpenReasoning(!openReasoning)}
                         >
-                            <NodeIndexOutlined />
+                            <NodeIndexOutlined/>
                             深度思考(R1)
                         </Button>
                     </Tooltip>
@@ -624,13 +664,13 @@ const ChatPage = () => {
                             type={openSearch ? 'primary' : 'default'}
                             onClick={() => setOpenSearch(!openSearch)}
                         >
-                            <GlobalOutlined />
+                            <GlobalOutlined/>
                             联网搜索
                         </Button>
                     </Tooltip>
                 </Flex>
 
-                <Flex  align='center' gap='small'>
+                <Flex align='center' gap='small'>
                     <Tooltip title={'上传附件'} placement='top'>
                         <Button
                             type='text'
@@ -673,62 +713,62 @@ const ChatPage = () => {
     }, []);
 
     return (
-            <XProvider
-                locale={zhCN}
-                theme={customTheme}
+        <XProvider
+            locale={zhCN}
+            theme={customTheme}
+        >
+            <ProLayout
+                className='h-lvh'
+                token={proLayoutToken}
+                pure={false} // 是否删除自带页面
+                navTheme={'light'}
+                layout={'side'}
+                siderWidth={250}
+                logo={<Logo/>}
+                title={appConfig.appName}
+                menuHeaderRender={menuHeaderRender} // Logo Title
+                menuExtraRender={addConversationRender} // 开启新对话按钮
+                menuContentRender={conversationRender} // 会话管理
+                actionsRender={actionsRender}
+                avatarProps={avatarRender} // 用户头像
+                footerRender={() => (<Footer/>)}  // 页脚
+
+                collapsedButtonRender={false} // 去掉默认侧边栏
+                collapsed={collapsed}
+                onCollapse={setCollapsed}
             >
-                <ProLayout
-                    className='h-lvh'
-                    token={proLayoutToken}
-                    pure={false} // 是否删除自带页面
-                    navTheme={'light'}
-                    layout={'side'}
-                    siderWidth={250}
-                    logo={<Logo/>}
-                    title={appConfig.appName}
-                    menuHeaderRender={menuHeaderRender} // Logo Title
-                    menuExtraRender={addConversationRender} // 开启新对话按钮
-                    menuContentRender={conversationRender} // 会话管理
-                    actionsRender={actionsRender}
-                    avatarProps={avatarRender} // 用户头像
-                    footerRender={() => (<Footer/>)}  // 页脚
+                <div className='fixed z-10 h-12 w-12'>
+                    {SidebarTrigger}
+                </div>
 
-                    collapsedButtonRender={false} // 去掉默认侧边栏
-                    collapsed={collapsed}
-                    onCollapse={setCollapsed}
+                <Flex
+                    vertical
+                    gap={'large'}
+                    className='w-full max-w-2xl'
+                    style={{margin: '0px auto', height: '94.5vh'}}
                 >
-                    <div className='fixed z-10 h-12 w-12'>
-                        {SidebarTrigger}
-                    </div>
+                    {/* 消息列表 */}
+                    <Bubble.List
+                        //roles={roles}
+                        items={messageItems}
+                    />
 
-                    <Flex
-                        vertical
-                        gap={'large'}
-                        className='w-full max-w-2xl'
-                        style={{margin: '0px auto', height: '94.5vh'}}
-                    >
-                        {/* 消息列表 */}
-                        <Bubble.List
-                            //roles={roles}
-                            items={messageItems}
-                        />
-
-                        {/* 输入框 */}
-                        <Sender
-                            style={{marginTop: 'auto', borderRadius: '20px'}}
-                            autoSize={{minRows: 2, maxRows: 8}}
-                            placeholder='请输入你的问题...'
-                            loading={agent.isRequesting()}
-                            value={inputTxt}
-                            onChange={setInputTxt}
-                            onSubmit={handleSubmitMsg}
-                            onCancel={handleCancel}
-                            actions={false}
-                            footer={senderFooter}
-                        />
-                    </Flex>
-                </ProLayout>
-            </XProvider>
+                    {/* 输入框 */}
+                    <Sender
+                        style={{marginTop: 'auto', borderRadius: '20px'}}
+                        autoSize={{minRows: 2, maxRows: 8}}
+                        placeholder='请输入你的问题...'
+                        loading={agent.isRequesting()}
+                        value={inputTxt}
+                        onChange={setInputTxt}
+                        onSubmit={handleSubmitMsg}
+                        onCancel={handleCancel}
+                        actions={false}
+                        footer={senderFooter}
+                    />
+                </Flex>
+            </ProLayout>
+        </XProvider>
     );
 };
 

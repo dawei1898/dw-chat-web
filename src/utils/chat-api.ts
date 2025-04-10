@@ -52,6 +52,7 @@ export type UserAgentMessage = {
     type: 'user';
     id: string;
     content: string;
+    reasoningContent?: string;
     chatId?: string;
     openReasoning?: boolean;
     openSearch?: boolean;

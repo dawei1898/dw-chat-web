@@ -80,7 +80,6 @@ const ChatPage = () => {
     const abortControllerRef = useRef<AbortController | null>(null);
     const [messageItems, updateMessageItems] = useImmer<BubbleDataType[]>([])
     const [collapsed, setCollapsed] = useState(false);
-    const [apiToken, setApiToken] = useState<string>('')
 
 
     // 主题配置
@@ -325,28 +324,17 @@ const ChatPage = () => {
         return <HeaderActions headerProps={props} dark={dark} setDark={setDark}/>
     }
 
-
-    useEffect(() => {
-        const fetchLoginUser = async () => {
-            try {
-                const loginUser = await getLoginUserCookie();
-                setApiToken(loginUser?.token || '');
-            } catch (error) {
-                console.error('Failed to fetch login user:', error);
-            }
-        };
-        fetchLoginUser();
-    }, []);
-
     // 模型连接信息
     const xRequest = XRequest({
-        baseURL: `${appConfig.apiBaseUrl}/chat/streamChat`,
-        //baseURL:  `http://localhost:9500/chat/streamChat`,
-        //dangerouslyApiKey: `Bearer ${apiToken}`,
-        fetch: (url, options) => {
-            return fetch(url, {
+        //baseURL: `${appConfig.apiBaseUrl}/chat/streamChat`,
+        baseURL:  `http://localhost:9500/chat/streamChat`,
+        fetch: async (url, options) => {
+            return  fetch(url, {
                 ...options,
-                headers: options?.headers,
+                headers: {
+                    "Authorization": `Bearer ${(await getLoginUserCookie())?.token}`,
+                    ...options?.headers,
+                },
                 signal: abortControllerRef.current?.signal, // 控制停止
             })
         }
@@ -359,8 +347,8 @@ const ChatPage = () => {
         request: async (info, callbacks) => {
             const {message, messages} = info
             const {onUpdate: onAgentUpdate, onSuccess: onAgentSuccess, onError: onAgentError} = callbacks;
-            console.log('message', message)
-            console.log('message list:', JSON.stringify(messages))
+            //console.log('message', message)
+            //console.log('message list:', JSON.stringify(messages))
 
             const aiMessage: AIAgentMessage = {
                 type: 'ai',
@@ -397,6 +385,7 @@ const ChatPage = () => {
                             if (resp_content) {
                                 aiMessage.content += resp_content;
                             }
+                            //console.log('onAgentUpdate， aiMessage：', JSON.stringify(aiMessage));
                             onAgentUpdate(aiMessage);
                         } catch (e) {
                             console.log('onUpdate fail：', e);
@@ -404,7 +393,7 @@ const ChatPage = () => {
                     },
                     onSuccess: (chunk) => {
                         //console.log('onSuccess， chunk：', JSON.stringify(chunk));
-                        console.log('onSuccess， aiMessage：', JSON.stringify(aiMessage));
+                        //console.log('onSuccess， aiMessage：', JSON.stringify(aiMessage));
                         onAgentSuccess(aiMessage);
                     },
                     onError: (error) => {
@@ -462,8 +451,12 @@ const ChatPage = () => {
                         : <DownOutlined style={{fontSize: '10px'}}/>}
                 </Button>
                 {open &&
-                    <div className='border-l-2 my-2 mr-2 pl-4'>
-                        <Bubble
+                    <div className='max-w-[600px] border-l-2 my-2 mr-2 pl-4'>
+                        <Typography.Text type='secondary'>
+                            {message.reasoningContent}
+                        </Typography.Text>
+
+                        {/*<Bubble
                             content={message.reasoningContent}
                             variant='borderless'
                             typing={message.loading && {step: 5, interval: 50}}
@@ -473,7 +466,7 @@ const ChatPage = () => {
                                     {content}
                                 </Typography.Text>
                             }
-                        />
+                        />*/}
                     </div>
                 }
 
@@ -530,28 +523,6 @@ const ChatPage = () => {
         </Space>
     }
 
-
-    // 角色格式设定
-    const roles: GetProp<typeof Bubble.List, 'roles'> = {
-        ai: {
-            placement: 'start',
-            variant: 'outlined',
-            avatar: {icon: <DeepSeekIcon/>, style: {border: '1px solid #c5eaee', backgroundColor: 'white'}},
-            //footer: !agent.isRequesting() && MessageFooter,
-            typing: (messages[0]?.status === 'loading') && {step: 5, interval: 50},
-            messageRender: (content) => (<MarkdownRender content={content}/>),
-            style: {
-                maxWidth: 700,
-            },
-            /*styles: {
-                footer: {marginLeft: "auto"}
-            }*/
-        },
-        user: {
-            placement: 'end',
-        },
-    };
-
     useEffect(() => {
         const finalMessageItems: BubbleDataType[] = messages.length > 0
             ? messages.map((
@@ -566,7 +537,7 @@ const ChatPage = () => {
                     ),
                     loading: status === 'loading' && requestLoading,
                     placement: message.type === 'ai' ? 'start' : 'end',
-                    variant: message.type === 'ai' ? 'outlined' : undefined,
+                    variant: message.type === 'ai' ? (message.content ? 'outlined' : 'borderless') : undefined,
                     avatar: message.type === 'ai' ?
                         {
                             icon: <DeepSeekIcon/>,
@@ -749,7 +720,6 @@ const ChatPage = () => {
                 >
                     {/* 消息列表 */}
                     <Bubble.List
-                        //roles={roles}
                         items={messageItems}
                     />
 

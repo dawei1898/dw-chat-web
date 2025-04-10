@@ -5,7 +5,7 @@ import {COOKIE_LOGIN_USER} from "@/utils/constant";
 
 /**
  * 中间件, 运行在服务端
- * 拦截客户端过来的请求
+ * 拦截客户端 (origin: 'http://localhost:3000') 过来的请求
  */
 const middleware = (request: NextRequest) => {
     console.log('经过中间件了')

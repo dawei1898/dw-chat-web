@@ -297,6 +297,8 @@ const ChatPage = () => {
                 Modal.confirm({
                     title: '永久删除对话',
                     content: '删除后，该对话不可恢复，确认删除吗？',
+                    okType: 'danger',
+                    okText: '删除',
                     onOk: async () => {
                         await deleteConversation(conversation.key)
                         apiMessage.success('删除成功')
@@ -352,7 +354,7 @@ const ChatPage = () => {
             const {message, messages} = info
             const {onUpdate: onAgentUpdate, onSuccess: onAgentSuccess, onError: onAgentError} = callbacks;
             //console.log('message', message)
-            //console.log('message list:', JSON.stringify(messages))
+            console.log('message list:', JSON.stringify(messages))
 
             const aiMessage: AIAgentMessage = {
                 type: 'ai',
@@ -374,6 +376,7 @@ const ChatPage = () => {
                         try {
                             setRequestLoading(false);
                             //console.log('onUpdate', JSON.stringify(chunk));
+                            // @ts-ignore
                             const data: MessageVO = JSON.parse(chunk.data);
 
                             aiMessage.id = data.msgId
@@ -567,6 +570,7 @@ const ChatPage = () => {
             return
         }
         const resp = await queryMessageListAPI(conversationKey)
+        // @ts-ignore
         const msgs: MessageInfo<AgentMessage>[] = resp.data.map((item) => ({
             id: item.msgId,
             status: item.type === 'user' ? 'local' : 'success',
@@ -592,18 +596,23 @@ const ChatPage = () => {
     const handleSubmitMsg = async (msg: string) => {
         setInputTxt('');
         setRequestLoading(true);
-        let chatId;
+        let chatId: string | undefined = '';
         if (!activeConversationKey) {
             chatId = await addConversation(msg);
         }
-        onRequest({
-            type: 'user',
-            id: Date.now().toString(),
-            chatId: chatId ? chatId : activeConversationKey,
-            content: msg,
-            openReasoning: openReasoning,
-            openSearch: openSearch,
-        });
+
+        // 延时一会发起提问
+        setTimeout(() => {
+            onRequest({
+                type: 'user',
+                id: Date.now().toString(),
+                chatId: chatId ? chatId : activeConversationKey,
+                content: msg,
+                openReasoning: openReasoning,
+                openSearch: openSearch,
+            });
+        }, 500)
+
     }
 
     /* 自定义发送框底部 */
@@ -624,7 +633,7 @@ const ChatPage = () => {
                             onClick={() => setOpenReasoning(!openReasoning)}
                         >
                             <NodeIndexOutlined/>
-                            深度思考(R1)
+                            深度思考
                         </Button>
                     </Tooltip>
                     <Tooltip

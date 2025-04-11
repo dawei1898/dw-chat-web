@@ -267,7 +267,7 @@ const ChatPage = () => {
                     onClick={() => setOpenReasoner(!openReasoner)}
                 >
                     <NodeIndexOutlined />
-                    深度思考(R1)
+                    深度思考
                 </Button>
             </Tooltip>
             <Tooltip

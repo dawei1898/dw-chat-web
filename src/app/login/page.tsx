@@ -115,7 +115,7 @@ const LoginPage = () => {
                                     prefix: <LockOutlined className={'prefixIcon'}/>,
                                     strengthText:
                                         'Password should contain numbers, letters and special characters, at least 8 characters long.',
-                                    statusRender: (value) => {
+                                    /*statusRender: (value) => {
                                         const getStatus = () => {
                                             if (value && value.length > 12) {
                                                 return 'ok';
@@ -145,7 +145,7 @@ const LoginPage = () => {
                                                 强度：弱
                                             </div>
                                         );
-                                    },
+                                    },*/
                                 }}
                                 rules={[
                                     {

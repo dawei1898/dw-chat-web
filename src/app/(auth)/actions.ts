@@ -78,6 +78,7 @@ export async function getUserCookieAction() {
         const userCookie = cookie.get(COOKIE_LOGIN_USER);
         if (userCookie) {
             const user: User = JSON.parse(userCookie.value);
+            console.log('获取登录用户信息')
             return user
         }
     } catch (e) {

@@ -21,7 +21,7 @@ export interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (username: string, password: string) => Promise<void>;
+    login: (username: string, password: string) => Promise<User | undefined>;
     logout: () => Promise<void>;
     isLogin: boolean;
     loading: boolean;
@@ -42,7 +42,7 @@ export const useAuth = () => {
  * 用户信息 鉴权 Provider
  * @constructor
  */
-const AuthProvider = ({ children }: { children: ReactNode }) => {
+const AuthProvider = ({children}: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const router = useRouter();
@@ -53,7 +53,9 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
             try {
                 const user = await getUserCookieAction();
                 console.log('userCookie:', JSON.stringify(user))
-                setUser(user)
+                if (user) {
+                    setUser(user)
+                }
             } catch (e) {
                 console.error('Failed to get user cookie', e);
                 setUser(null);
@@ -65,18 +67,23 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     // 使用 useCallback 避免函数引用变化
-    const login = useCallback(async (username:string, password: string) => {
-        const resp = await loginAPI({username, password});
-        if (resp.code === 200) {
-            // 使用 cookies 存储登录信息
-            await setUserCookieAction(username, resp.data)
-            setUser(user);
-        }
-    }, [])
+    const login = useCallback(async (username: string, password: string) => {
+            const resp = await loginAPI({username, password});
+            if (resp.code === 200) {
+                const u: User = {username, token: resp.data}
+                setUser(u);
+                // 使用 cookies 存储登录信息
+                await setUserCookieAction(username, resp.data)
+                return u
+            } else {
+                setUser(null)
+            }
+        }, [])
 
     const logout = useCallback(async () => {
         const resp = await logoutAPI()
         if (resp.code == 200) {
+            setUser(null)
             await cleanUserCookieAction()
         } else {
             message.error(resp.message)

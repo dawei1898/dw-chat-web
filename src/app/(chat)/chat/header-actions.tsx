@@ -1,17 +1,18 @@
 import React from 'react';
 import {HeaderViewProps} from "@ant-design/pro-layout/es/components/Header";
-import {Button, Input} from "antd";
-import {GithubFilled, MoonFilled, SearchOutlined, SunOutlined} from "@ant-design/icons";
+import {Button} from "antd";
+import {GithubFilled, MoonFilled, SunOutlined} from "@ant-design/icons";
 import Link from "next/link";
+import {useTheme} from "@/components/provider/theme-provider";
 
 type HeaderActions = {
     headerProps: HeaderViewProps,
-    dark: boolean,
-    setDark: (value: boolean) => void,
 }
 
 const HeaderActions = (props: HeaderActions) => {
     if (props.headerProps.isMobile) return [];
+
+    const {isDark, toggleTheme} = useTheme();
 
     return [
         /* 亮暗模式切换 */
@@ -19,9 +20,9 @@ const HeaderActions = (props: HeaderActions) => {
             key='dark'
             type='text'
             shape='circle'
-            onClick={() => props?.setDark(!props.dark)}
+            onClick={toggleTheme}
         >
-            {props.dark ?
+            {isDark() ?
                 <MoonFilled style={{fontSize: '18px'}}/>
                 : <SunOutlined style={{fontSize: '18px'}}/>
             }

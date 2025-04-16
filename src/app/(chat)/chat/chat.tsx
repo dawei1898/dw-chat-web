@@ -17,23 +17,23 @@ import {
     message as apiMessage,
     Tooltip, theme,
     ThemeConfig, Flex,
-    Modal, Input, Typography
+    Modal, Input, Typography, type AvatarProps
 } from "antd";
 import {
     CopyOutlined, DeleteOutlined, DislikeFilled,
     DislikeOutlined, DownOutlined, EditOutlined,
     GlobalOutlined, LikeFilled, LikeOutlined,
     NodeIndexOutlined, PaperClipOutlined,
-    PlusOutlined, UpOutlined
+    PlusOutlined, UpOutlined, UserOutlined
 } from "@ant-design/icons";
 import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";
-import MarkdownRender from "@/app/chat/markdown-render";
-import InitWelcome from "@/app/chat/init-welcome";
-import Logo from "@/app/chat/logo";
+import MarkdownRender from "@/app/(chat)/chat/markdown-render";
+import InitWelcome from "@/app/(chat)/chat/init-welcome";
+import Logo from "@/app/(chat)/chat/logo";
 import zhCN from "antd/locale/zh_CN";
-import Footer from "@/app/chat/footer";
-import HeaderActions from "@/app/chat/header-actions";
+import Footer from "@/app/(chat)/chat/footer";
+import HeaderActions from "@/app/(chat)/chat/header-actions";
 import type {ProTokenType} from "@ant-design/pro-provider";
 import {SiderMenuProps} from "@ant-design/pro-layout/es/components/SiderMenu/SiderMenu";
 import type {HeaderViewProps} from "@ant-design/pro-layout/es/components/Header";
@@ -41,7 +41,6 @@ import {DeepSeekIcon, PanelLeftClose, PanelLeftOpen} from "@/components/Icons";
 import {Conversation} from "@ant-design/x/es/conversations";
 import {writeText} from "clipboard-polyfill";
 import {appConfig} from "@/utils/appConfig";
-import {avatarRender} from "@/app/chat/sidebar-avatar";
 import {ProLayout} from "@ant-design/pro-layout";
 import {
     AgentMessage,
@@ -54,8 +53,12 @@ import {
     saveVoteAPI,
     StreamChatParam
 } from "@/apis/chat-api";
-import {getLoginUserCookie} from "@/app/actions";
+import {getUserCookieAction} from "@/app/(auth)/actions";
 import {MessageInfo} from "@ant-design/x/es/use-x-chat";
+import {useTheme} from "@/components/provider/theme-provider";
+import {useAuth} from "@/components/provider/auth-provider";
+import AvatarDropdown from "@/app/(chat)/chat/avatar-dropdown";
+import {ProLayoutProps} from "@ant-design/pro-components";
 
 
 // 动态导入
@@ -69,7 +72,8 @@ const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
 
 const ChatPage = () => {
     const {token} = theme.useToken();
-    const [dark, setDark] = useState(false);
+    const {isDark} = useTheme();
+    const {user} = useAuth();
     const [inputTxt, setInputTxt] = useState<string>('');
     const [requestLoading, setRequestLoading] = useState<boolean>(false);
     const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
@@ -83,7 +87,7 @@ const ChatPage = () => {
 
     // 主题配置
     const customTheme: ThemeConfig = {
-        algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        algorithm: isDark() ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
             colorPrimary: token.colorPrimary,
         }
@@ -92,7 +96,7 @@ const ChatPage = () => {
     // ProLayout Token
     const proLayoutToken: ProTokenType['layout'] = {
         pageContainer: {
-            colorBgPageContainer: dark ? '' : token.colorBgBase,
+            colorBgPageContainer: isDark() ? '' : token.colorBgBase,
             paddingBlockPageContainerContent: 10,  // 上下内距离
             paddingInlinePageContainerContent: 5, // 左右内距离
         },
@@ -327,18 +331,30 @@ const ChatPage = () => {
 
     // actionsRender
     const actionsRender = (props: HeaderViewProps) => {
-        return <HeaderActions headerProps={props} dark={dark} setDark={setDark}/>
+        return <HeaderActions headerProps={props}/>
+    }
+
+    /**
+     * 用户头像渲染
+     */
+    const avatarRender: ProLayoutProps['avatarProps'] = {
+        icon: (<UserOutlined/>),
+        size: 'small',
+        title: (<>{user?.username}</>),
+        render: (avatarProps: AvatarProps, avatarChildren: React.ReactNode) => {
+            return (<AvatarDropdown>{avatarChildren}</AvatarDropdown>);
+        },
     }
 
     // 模型连接信息
     const xRequest = XRequest({
-        //baseURL: `/sse/api/chat/streamChat`,
-        baseURL:  `http://localhost:9500/chat/streamChat`,
+        //baseURL:  http://localhost:9500/chat/streamChat,
+        baseURL:  `${appConfig.apiStreamChatUrl}`,
         fetch: async (url, options) => {
             return  fetch(url, {
                 ...options,
                 headers: {
-                    "Authorization": `Bearer ${(await getLoginUserCookie())?.token}`,
+                    "Authorization": `Bearer ${(await getUserCookieAction())?.token}`,
                     ...options?.headers,
                 },
                 signal: abortControllerRef.current?.signal, // 控制停止

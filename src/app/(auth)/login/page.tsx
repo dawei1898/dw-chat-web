@@ -16,12 +16,10 @@ import {
     ProFormText,
     setAlpha,
 } from '@ant-design/pro-components';
-import {useRouter} from "next/navigation";
-import Logo from "@/app/chat/logo";
+import {useRouter, useSearchParams} from "next/navigation";
+import Logo from "@/app/(chat)/chat/logo";
 import {appConfig} from "@/utils/appConfig";
-import {loginAPI} from "@/apis/user-api";
-import {setLoginUserCookie} from "@/app/actions";
-
+import {useAuth} from "@/components/provider/auth-provider";
 
 
 type LoginType = 'account' | 'email';
@@ -32,8 +30,13 @@ type LoginType = 'account' | 'email';
  */
 const LoginPage = () => {
     const {token} = theme.useToken();
-    const [loginType, setLoginType] = useState<LoginType>('account');
     const router = useRouter();
+    const {user, login, logout, loading} = useAuth();
+    const [loginType, setLoginType] = useState<LoginType>('account');
+
+    const searchParams = useSearchParams();
+    const redirect = searchParams.get('redirect') || '/';
+    console.log('redirect:', redirect)
 
     const iconStyles: CSSProperties = {
         marginInlineStart: '16px',
@@ -45,20 +48,37 @@ const LoginPage = () => {
 
 
     // 执行登录操作
-    const handleLogin = async (formData: Record<string, any>)=> {
+    const handleLogin = async (formData: Record<string, any>) => {
         const username: string = formData.username;
         const password: string = formData.password;
-        console.log('执行成功: username: ' + username + ', password: ' + password );
+        await login(username, password)
+
+        //const resp: ApiResponse<string> = await loginAction(username, password);
+        if (user) {
+            message.success('登录成功')
+            console.log('登录成功后跳回之前要去的页面:', redirect)
+            router.replace(redirect);
+        } else {
+            message.error('登录失败')
+            console.log('user is null')
+        }
+    }
+    /*const handleLogin = async (formData: Record<string, any>) => {
+        const username: string = formData.username;
+        const password: string = formData.password;
+        console.log('执行成功: username: ' + username + ', password: ' + password);
         const resp = await loginAPI({username, password});
         if (resp.code === 200) {
             // 使用 cookies 存储登录信息
-            await setLoginUserCookie(username,resp.data)
+            await setLoginUserCookie(username, resp.data)
             message.success('登录成功')
-            router.push('/')
-        }  else {
+            // 登录成功后跳回之前要去的页面
+            router.replace(redirect);
+        } else {
             message.error(resp.message)
         }
-    }
+    }*/
+
 
     return (
         <ProConfigProvider hashed={false}>
@@ -70,7 +90,8 @@ const LoginPage = () => {
             >
                 <LoginForm
                     logo={<Logo/>}
-                    title={<span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 ml-2">
+                    title={<span
+                        className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 ml-2">
                             {appConfig.appName}
                            </span>}
                     subTitle="AI 聊天页面"
@@ -115,37 +136,6 @@ const LoginPage = () => {
                                     prefix: <LockOutlined className={'prefixIcon'}/>,
                                     strengthText:
                                         'Password should contain numbers, letters and special characters, at least 8 characters long.',
-                                    /*statusRender: (value) => {
-                                        const getStatus = () => {
-                                            if (value && value.length > 12) {
-                                                return 'ok';
-                                            }
-                                            if (value && value.length > 6) {
-                                                return 'pass';
-                                            }
-                                            return 'poor';
-                                        };
-                                        const status = getStatus();
-                                        if (status === 'pass') {
-                                            return (
-                                                <div style={{color: token.colorWarning}}>
-                                                    强度：中
-                                                </div>
-                                            );
-                                        }
-                                        if (status === 'ok') {
-                                            return (
-                                                <div style={{color: token.colorSuccess}}>
-                                                    强度：强
-                                                </div>
-                                            );
-                                        }
-                                        return (
-                                            <div style={{color: token.colorError}}>
-                                                强度：弱
-                                            </div>
-                                        );
-                                    },*/
                                 }}
                                 rules={[
                                     {
@@ -199,7 +189,7 @@ const LoginPage = () => {
                                         }
                                         if (status === 'ok') {
                                             return (
-                                                <div  style={{color: token.colorSuccess}}>
+                                                <div style={{color: token.colorSuccess}}>
                                                     强度：强
                                                 </div>
                                             );
@@ -211,7 +201,7 @@ const LoginPage = () => {
                                         );
                                     },
                                 }}
-                                placeholder={'密码: ant.design'}
+                                placeholder={'密码: 123456'}
                                 rules={[
                                     {
                                         required: true,
@@ -221,11 +211,11 @@ const LoginPage = () => {
                             />
                         </>
                     )}
-                    <div style={{ marginBlockEnd: 24,  }} >
+                    <div style={{marginBlockEnd: 24,}}>
                         <ProFormCheckbox noStyle name="autoLogin">
                             自动登录
                         </ProFormCheckbox>
-                        <a style={{ float: 'right', }} >
+                        <a style={{float: 'right',}}>
                             忘记密码
                         </a>
                     </div>

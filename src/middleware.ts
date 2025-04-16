@@ -15,9 +15,13 @@ const middleware = (request: NextRequest) => {
     const pathname = request.nextUrl.pathname;
 
     // 拦截 /dwc/api 请求，设置 token
-    if (pathname.startsWith('/dwc/api/')
+    if ((pathname.startsWith('/dwc/api/')
+            || pathname.startsWith('/dev/dwc/api/')
+        )
         && !pathname.startsWith('/dwc/api/user/login')
+        && !pathname.startsWith('/dev/dwc/api/user/login')
         && !pathname.startsWith('/dwc/api/user/register')
+        && !pathname.startsWith('/dev/dwc/api/user/register')
     ) {
         let loginUserCookie = request.cookies.get(COOKIE_LOGIN_USER)
         //console.log('loginUserCookie:', loginUserCookie)
@@ -46,5 +50,7 @@ export default middleware;
 export const config = {
     matcher: [
         '/dwc/api/:path*',
+        '/dev/dwc/api/:path*',
+        '/api/:path*',
     ],
 }

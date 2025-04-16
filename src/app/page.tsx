@@ -1,4 +1,4 @@
-import Chat from "@/app/chat/chat";
+import Chat from "@/app/(chat)/chat/chat";
 
 export default function Home() {
   return (

@@ -4,7 +4,8 @@
  */
 export const appConfig = {
   appName: process.env.NEXT_PUBLIC_APP_NAME,
+  apiBaseHostname: process.env.NEXT_PUBLIC_API_BASE_HOSTNAME,
   apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
-  deepSeekBaseUrl: process.env.NEXT_PUBLIC_DEEPSEEK_BASE_URL || '',
-  deepSeekApiKey: process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY,
+  apiProxyTargetUrl: process.env.NEXT_PUBLIC_API_PROXY_TARGIT_URL,
+  apiStreamChatUrl: process.env.NEXT_PUBLIC_STREAM_CHAT_API_URL,
 }

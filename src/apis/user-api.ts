@@ -1,6 +1,6 @@
 import {appConfig} from "@/utils/appConfig";
 import type {ApiResponse} from "@/apis/index";
-import {clientFetcher} from "@/apis/fetcher";
+import {clientFetcher} from "@/utils/fetcher";
 
 
 /**
@@ -36,7 +36,7 @@ export interface LoginUser {
  * @param password
  */
 export const  registerAPI = async ({username, email, password}: RegisterParam) => {
-    const url = `${appConfig.apiBaseUrl}/user/register`;
+    const url = `/user/register`;
     const options = {
         method: "POST",
         body: JSON.stringify({
@@ -57,7 +57,7 @@ export const  registerAPI = async ({username, email, password}: RegisterParam) =
  * @param password
  */
 export const loginAPI = async ({username, password}: LoginParam) => {
-    const url = `${appConfig.apiBaseUrl}/user/login`;
+    const url = `/user/login`;
     const options = {
         method: "POST",
         body: JSON.stringify({
@@ -75,7 +75,7 @@ export const loginAPI = async ({username, password}: LoginParam) => {
  * 退出登录 API
  */
 export const logoutAPI = async () => {
-    const url = `${appConfig.apiBaseUrl}/user/logout`;
+    const url = `/user/logout`;
     const options = {
         method: "DELETE",
     }
@@ -88,7 +88,7 @@ export const logoutAPI = async () => {
  * 查询用户信息 API
  */
 export const queryUserAPI = async () => {
-    const url = `${appConfig.apiBaseUrl}/user/queryUser`;
+    const url = `/user/queryUser`;
     const options = {
         method: "GET",
     }

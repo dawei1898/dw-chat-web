@@ -2,7 +2,7 @@ import {Conversation} from "@ant-design/x/es/conversations";
 import {ApiResponse, PageResult} from "@/apis";
 import {ChatRecordVO} from "@/apis/chat-api";
 import {appConfig} from "@/utils/appConfig";
-import {serverFetcher} from "@/apis/fetcher";
+import {serverFetcher} from "@/utils/fetcher";
 
 
 /**
@@ -11,7 +11,7 @@ import {serverFetcher} from "@/apis/fetcher";
 export const fetchInitChatList = async (): Promise<Conversation[]> => {
     console.log('fetchInitChatList')
     try {
-        const url = `${appConfig.clientHost}/api/chat`;
+        const url = `/api/chat`;
         console.log('url:', url)
         const options = {
             method: "POST",

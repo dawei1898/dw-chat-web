@@ -1,5 +1,6 @@
-import {ApiResponse} from "@/apis/index";
+import {ApiResponse} from "@/apis";
 import {getUserCookieAction} from "@/app/(auth)/actions";
+import {appConfig} from "@/utils/appConfig";
 
 /**
  * 封装客户端组件 Fetch
@@ -8,7 +9,8 @@ import {getUserCookieAction} from "@/app/(auth)/actions";
  * @param options
  */
 export async function clientFetcher(url: string, options: RequestInit = {}): Promise<ApiResponse> {
-    const res = await fetch(url, {
+
+    const res = await fetch(`${appConfig.apiBaseUrl}${url}`, {
         ...options,
         headers: {
             "Content-Type": "application/json",
@@ -50,7 +52,7 @@ export async function serverFetcher(url: string, options: RequestInit = {}): Pro
     const token = userCookie?.token || '';
     console.log('get token :', token)
 
-    const res = await fetch(url, {
+    const res = await fetch(`${appConfig.clientHost}${url}`, {
         ...options,
         headers: {
             "Content-Type": "application/json",

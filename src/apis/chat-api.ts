@@ -1,6 +1,6 @@
 import {appConfig} from "@/utils/appConfig";
 import type {ApiResponse, PageParam, PageResult} from "@/apis/index";
-import {clientFetcher} from "@/apis/fetcher";
+import {clientFetcher} from "@/utils/fetcher";
 
 
 /**
@@ -95,7 +95,7 @@ export interface VoteParam {
  * @param param
  */
 export const  queryChatPageAPI = async (param: RecordPageParam) => {
-    const url = `${appConfig.apiBaseUrl}/chat/queryChatPage`;
+    const url = `/chat/queryChatPage`;
     const options = {
         method: "POST",
         body: JSON.stringify(param),
@@ -109,7 +109,7 @@ export const  queryChatPageAPI = async (param: RecordPageParam) => {
  * 保存会话 API
  */
 export const  saveChatAPI = async (param: ChatRecord) => {
-    const url = `${appConfig.apiBaseUrl}/chat/saveChat`;
+    const url = `/chat/saveChat`;
     const options = {
         method: "POST",
         body: JSON.stringify(param),
@@ -123,7 +123,7 @@ export const  saveChatAPI = async (param: ChatRecord) => {
  * 删除会话 API
  */
 export const  deleteChatAPI = async (chatId: string) => {
-    const url = `${appConfig.apiBaseUrl}/chat/deleteChat/${chatId}`;
+    const url = `/chat/deleteChat/${chatId}`;
     const options = {
         method: "DELETE",
     }
@@ -138,7 +138,7 @@ export const  deleteChatAPI = async (chatId: string) => {
  * 查询当前会话消息列表
  */
 export const  queryMessageListAPI = async (chatId: string) => {
-    const url = `${appConfig.apiBaseUrl}/chat/queryMessageList/${chatId}`;
+    const url = `/chat/queryMessageList/${chatId}`;
     const options = {
         method: "GET",
     }
@@ -151,7 +151,7 @@ export const  queryMessageListAPI = async (chatId: string) => {
  * 点赞/踩 API
  */
 export const  saveVoteAPI = async (param: VoteParam) => {
-    const url = `${appConfig.apiBaseUrl}/vote/saveVote`;
+    const url = `/vote/saveVote`;
     const options = {
         method: "POST",
         body: JSON.stringify(param),

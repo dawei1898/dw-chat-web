@@ -17,9 +17,8 @@ export async function POST(request: NextRequest) {
     console.log('authorization', authorization)
 
     //const url = `http://localhost:3000/dev/dwc/api/chat/queryChatPage`;
-    const url = `${appConfig.apiBaseHostname}${appConfig.apiBaseUrl}/chat/queryChatPage`;
+    const url = `${appConfig.clientHost}${appConfig.apiBaseUrl}/chat/queryChatPage`;
     console.log('url:', url)
-    // @ts-ignore
     const options = {
         method: "POST",
         headers: {
@@ -27,9 +26,13 @@ export async function POST(request: NextRequest) {
             "Authorization": authorization,
         },
         body: JSON.stringify(param),
+        //cache: 'no-store', // 禁止缓存
     }
-    const apiResponse: ApiResponse<PageResult<ChatRecordVO>> = await fetch(url, options)
-        .then(resp => resp.json());
+    const resp = await fetch(url, options);
+    if (!resp.ok) {
+        console.log('Failed to queryChatPage.', resp.status)
+    }
+    const apiResponse: ApiResponse<PageResult<ChatRecordVO>> = await resp.json();
     console.log('api/chat response:', JSON.stringify(apiResponse));
     return NextResponse.json(apiResponse)
 }

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     console.log('authorization', authorization)
 
     //const url = `http://localhost:3000/dev/dwc/api/chat/queryMessageList/dfaeafd12ead3d`;
-    const url = `${appConfig.apiBaseHostname}${appConfig.apiBaseUrl}/chat/queryMessageList/${chatId}`;
+    const url = `${appConfig.clientHost}${appConfig.apiBaseUrl}/chat/queryMessageList/${chatId}`;
     console.log('url:', url)
     // @ts-ignore
     const options = {

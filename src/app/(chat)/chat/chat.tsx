@@ -72,8 +72,6 @@ const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
 
 type ChatProps = {
     defaultConversationItems?: Conversation[];
-    defaultActiveConversationKey?: string;
-    defaultMessages?: MessageInfo<AgentMessage>[];
 }
 
 const ChatPage = (props: ChatProps) => {
@@ -84,7 +82,7 @@ const ChatPage = (props: ChatProps) => {
     const [inputTxt, setInputTxt] = useState<string>('');
     const [requestLoading, setRequestLoading] = useState<boolean>(false);
     const [conversationsItems, setConversationsItems] = useState(props.defaultConversationItems);
-    const [activeConversationKey, setActiveConversationKey] = useState<string>(props.defaultActiveConversationKey || '');
+    const [activeConversationKey, setActiveConversationKey] = useState<string>('');
     const [openSearch, setOpenSearch] = useState<boolean>(false);
     const [openReasoning, setOpenReasoning] = useState<boolean>(false);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -554,12 +552,12 @@ const ChatPage = (props: ChatProps) => {
     }
 
 
-    useEffect(() => {
+    /*useEffect(() => {
         if (props.defaultMessages) {
             console.log('init Messages')
             setMessages(props.defaultMessages)
         }
-    }, []);
+    }, []);*/
 
     useEffect(() => {
         const finalMessageItems: BubbleDataType[] = messages.length > 0

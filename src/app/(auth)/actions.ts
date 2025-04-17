@@ -19,7 +19,7 @@ export async function loginAction(username: string, password: string) {
         return null
     }
     console.log('执行登录操作: username: ' + username + ', password: ' + password);
-    const url = `${appConfig.apiBaseHostname}/api/auth/login`;
+    const url = `${appConfig.clientHost}/api/auth/login`;
     const options = {
         method: "POST",
         headers: {
@@ -55,9 +55,9 @@ export async function setUserCookieAction(username: string, token: string) {
         {
             path: '/',
             httpOnly: true, // ❗必须为 false，客户端才能读取
-            secure: process.env.NODE_ENV === 'production', // 设置了 secure: true，只能在 https 环境下  Cookies.get 到 Cookie。
+            //secure: process.env.NODE_ENV === 'production', // 设置了 secure: true，只能在 https 环境下  Cookies.get 到 Cookie。
             sameSite: 'strict', // 设置了 sameSite: 'strict'，请求是从同一站点发起的，才能 Cookies.get 到 Cookie。
-            maxAge: 60 * 60 * 24 * 3 // 3 days
+            maxAge: 60 * 60 * 24 * 1 // 1 days
         }
     );
     console.log('储存登录用户信息')
@@ -78,10 +78,6 @@ export async function cleanUserCookieAction() {
  */
 export async function getUserCookieAction() {
     try {
-        if (process.env.NEXT_PHASE === 'phase-production-build') {
-            console.log('构建阶段，不执行')
-            return null
-        }
         const cookie = await cookies();
         const userCookie = cookie.get(COOKIE_LOGIN_USER);
         if (userCookie) {

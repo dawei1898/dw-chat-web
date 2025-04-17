@@ -14,6 +14,10 @@ import {appConfig} from "@/utils/appConfig";
  * 执行登录操作
  */
 export async function loginAction(username: string, password: string) {
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+        console.log('构建阶段，不执行')
+        return null
+    }
     console.log('执行登录操作: username: ' + username + ', password: ' + password);
     const url = `${appConfig.apiBaseHostname}/api/auth/login`;
     const options = {
@@ -74,6 +78,10 @@ export async function cleanUserCookieAction() {
  */
 export async function getUserCookieAction() {
     try {
+        if (process.env.NEXT_PHASE === 'phase-production-build') {
+            console.log('构建阶段，不执行')
+            return null
+        }
         const cookie = await cookies();
         const userCookie = cookie.get(COOKIE_LOGIN_USER);
         if (userCookie) {

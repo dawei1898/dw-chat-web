@@ -3,6 +3,7 @@
 import React, {useState} from 'react';
 import type {CSSProperties} from 'react';
 import {Space, Tabs, message, theme, Flex} from 'antd';
+import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import {
     GithubOutlined,
     GoogleOutlined,
@@ -29,6 +30,7 @@ type LoginType = 'account' | 'email';
  * 登录页
  */
 const LoginPage = () => {
+    const [messageApi, contextHolder] = message.useMessage();
     const {token} = theme.useToken();
     const router = useRouter();
     const {login} = useAuth();
@@ -55,13 +57,13 @@ const LoginPage = () => {
 
         const user = await login(username, password);
         if (user) {
-            message.success('登录成功')
+            messageApi.success('登录成功')
             console.log('登录成功')
             router.push('/')
             //console.log('登录成功后跳回之前要去的页面:', redirect)
             //router.replace(redirect);
         } else {
-            message.error('登录失败')
+            messageApi.error('登录失败')
             console.log('user is null')
         }
     }
@@ -88,6 +90,7 @@ const LoginPage = () => {
 
     return (
         <ProConfigProvider hashed={false}>
+            {contextHolder}
             <Flex
                 style={{
                     backgroundColor: token.colorBgContainer,

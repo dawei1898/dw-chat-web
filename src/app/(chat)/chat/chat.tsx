@@ -14,10 +14,11 @@ import {
 } from "@ant-design/x";
 import {
     Button, GetProp, Space,
-    message as apiMessage,
+    message,
     Tooltip, theme,
     ThemeConfig, Flex,
-    Modal, Input, Typography, type AvatarProps
+    Modal, Input, Typography, 
+    type AvatarProps,
 } from "antd";
 import {
     CopyOutlined, DeleteOutlined, DislikeFilled,
@@ -76,6 +77,7 @@ type ChatProps = {
 
 const ChatPage = (props: ChatProps) => {
     console.log('init ChatPage')
+    const [messageApi, contextHolder] = message.useMessage();
     const {token} = theme.useToken();
     const {isDark} = useTheme();
     const {user} = useAuth();
@@ -236,7 +238,7 @@ const ChatPage = (props: ChatProps) => {
         if (resp.code == 200) {
             await initConversations()
         } else {
-            apiMessage.error(resp.message)
+            messageApi.error(resp.message)
         }
     }
 
@@ -249,7 +251,7 @@ const ChatPage = (props: ChatProps) => {
             if (resp.code == 200) {
                 await initConversations()
             } else {
-                apiMessage.error(resp.message)
+                messageApi.error(resp.message)
             }
         }
     }
@@ -293,11 +295,11 @@ const ChatPage = (props: ChatProps) => {
                     onOk: async () => {
                         if (newLabel) {
                             await saveConversation(conversation.key, newLabel)
-                            apiMessage.success('重命名成功');
+                            messageApi.success('重命名成功');
                         }
                     },
                     onCancel: () => {
-                        apiMessage.info('取消重命名');
+                        messageApi.info('取消重命名');
                     },
                 });
             }
@@ -310,7 +312,7 @@ const ChatPage = (props: ChatProps) => {
                     okText: '删除',
                     onOk: async () => {
                         await deleteConversation(conversation.key)
-                        apiMessage.success('删除成功')
+                        messageApi.success('删除成功')
                     }
                 });
             }
@@ -509,7 +511,7 @@ const ChatPage = (props: ChatProps) => {
         message.voteType = message.voteType === 'up' ? '' : 'up'
         await saveVoteAPI({'contentId': message.id, 'voteType': message.voteType})
         if (message.voteType === 'up') {
-            apiMessage.success('感谢您的支持')
+            messageApi.success('感谢您的支持')
         }
     }
 
@@ -520,7 +522,7 @@ const ChatPage = (props: ChatProps) => {
         message.voteType = message.voteType === 'down' ? '' : 'down'
         await saveVoteAPI({'contentId': message.id, 'voteType': message.voteType})
         if (message.voteType === 'down') {
-            apiMessage.info('感谢您的反馈')
+            messageApi.info('感谢您的反馈')
         }
     }
 
@@ -544,7 +546,7 @@ const ChatPage = (props: ChatProps) => {
                     size={'small'} type={'text'} icon={<CopyOutlined/>}
                     onClick={() => {
                         writeText(message.content);
-                        apiMessage.success('已复制');
+                        messageApi.success('已复制');
                     }}
                 />
             </Tooltip>
@@ -711,7 +713,7 @@ const ChatPage = (props: ChatProps) => {
     const handleCancel = () => {
         setRequestLoading(false);
         abortControllerRef.current?.abort('手动停止');
-        apiMessage.error('已停止')
+        messageApi.error('已停止')
     }
 
     // 通过 useEffect 清理函数自动取消未完成的请求：
@@ -728,6 +730,7 @@ const ChatPage = (props: ChatProps) => {
             locale={zhCN}
             theme={customTheme}
         >
+            {contextHolder}
             <ProLayout
                 className='h-lvh'
                 token={proLayoutToken}

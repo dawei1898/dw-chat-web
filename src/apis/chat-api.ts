@@ -1,5 +1,6 @@
 import {appConfig} from "@/utils/appConfig";
 import type {ApiResponse, PageParam, PageResult} from "@/apis/index";
+import {clientFetcher} from "@/apis/fetcher";
 
 
 /**
@@ -97,17 +98,9 @@ export const  queryChatPageAPI = async (param: RecordPageParam) => {
     const url = `${appConfig.apiBaseUrl}/chat/queryChatPage`;
     const options = {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
         body: JSON.stringify(param),
     }
-    const response: ApiResponse<PageResult<ChatRecordVO>> = await fetch(url, options).then(resp => resp.json());
-    if (response.code === 401) {
-        console.log('鉴权失败 401')
-        window.location.href = '/login'; // 统一跳转到登录页
-        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
-    }
+    const response: ApiResponse<PageResult<ChatRecordVO>> = await clientFetcher(url, options);
     return response;
 }
 
@@ -119,17 +112,9 @@ export const  saveChatAPI = async (param: ChatRecord) => {
     const url = `${appConfig.apiBaseUrl}/chat/saveChat`;
     const options = {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
         body: JSON.stringify(param),
     }
-    const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    if (response.code === 401) {
-        console.log('鉴权失败 401')
-        window.location.href = '/login'; // 统一跳转到登录页
-        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
-    }
+    const response: ApiResponse<string> = await clientFetcher(url, options);
     return response;
 }
 
@@ -141,16 +126,8 @@ export const  deleteChatAPI = async (chatId: string) => {
     const url = `${appConfig.apiBaseUrl}/chat/deleteChat/${chatId}`;
     const options = {
         method: "DELETE",
-        headers: {
-            "Content-Type": "application/json",
-        },
     }
-    const response: ApiResponse<number> = await fetch(url, options).then(resp => resp.json());
-    if (response.code === 401) {
-        console.log('鉴权失败 401')
-        window.location.href = '/login'; // 统一跳转到登录页
-        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
-    }
+    const response: ApiResponse<number> = await clientFetcher(url, options);
     return response;
 }
 
@@ -164,16 +141,8 @@ export const  queryMessageListAPI = async (chatId: string) => {
     const url = `${appConfig.apiBaseUrl}/chat/queryMessageList/${chatId}`;
     const options = {
         method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-        },
     }
-    const response: ApiResponse<MessageVO[]> = await fetch(url, options).then(resp => resp.json());
-    if (response.code === 401) {
-        console.log('鉴权失败 401')
-        window.location.href = '/login'; // 统一跳转到登录页
-        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
-    }
+    const response: ApiResponse<MessageVO[]> = await clientFetcher(url, options);
     return response;
 }
 
@@ -185,18 +154,9 @@ export const  saveVoteAPI = async (param: VoteParam) => {
     const url = `${appConfig.apiBaseUrl}/vote/saveVote`;
     const options = {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
         body: JSON.stringify(param),
-
     }
-    const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    if (response.code === 401) {
-        console.log('鉴权失败 401')
-        window.location.href = '/login'; // 统一跳转到登录页
-        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
-    }
+    const response: ApiResponse<string> = await clientFetcher(url, options);
     return response;
 }
 

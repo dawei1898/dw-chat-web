@@ -24,7 +24,7 @@ const middleware = (request: NextRequest) => {
         && !pathname.startsWith('/dev/dwc/api/user/register')
     ) {
         let loginUserCookie = request.cookies.get(COOKIE_LOGIN_USER)
-        //console.log('loginUserCookie:', loginUserCookie)
+        //console.log('Add loginUserCookie:', loginUserCookie)
         if (loginUserCookie) {
             const loginUser: LoginUser = JSON.parse(loginUserCookie?.value);
             // Clone the request headers and set a new header 'Authorization'
@@ -51,6 +51,6 @@ export const config = {
     matcher: [
         '/dwc/api/:path*',
         '/dev/dwc/api/:path*',
-        '/api/:path*',
+        //'/api/:path*',
     ],
 }

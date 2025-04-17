@@ -70,14 +70,21 @@ import {ProLayoutProps} from "@ant-design/pro-components";
 const defaultConversationsItems: GetProp<ConversationsProps, 'items'> = []
 
 
-const ChatPage = () => {
+type ChatProps = {
+    defaultConversationItems?: Conversation[];
+    defaultActiveConversationKey?: string;
+    defaultMessages?: MessageInfo<AgentMessage>[];
+}
+
+const ChatPage = (props: ChatProps) => {
+    console.log('init ChatPage')
     const {token} = theme.useToken();
     const {isDark} = useTheme();
     const {user} = useAuth();
     const [inputTxt, setInputTxt] = useState<string>('');
     const [requestLoading, setRequestLoading] = useState<boolean>(false);
-    const [conversationsItems, setConversationsItems] = useState(defaultConversationsItems);
-    const [activeConversationKey, setActiveConversationKey] = useState<string>('');
+    const [conversationsItems, setConversationsItems] = useState(props.defaultConversationItems);
+    const [activeConversationKey, setActiveConversationKey] = useState<string>(props.defaultActiveConversationKey || '');
     const [openSearch, setOpenSearch] = useState<boolean>(false);
     const [openReasoning, setOpenReasoning] = useState<boolean>(false);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -199,16 +206,16 @@ const ChatPage = () => {
             pageNum: 1, pageSize: 100, chatName: ''
         })
         if (resp.data) {
-            const initConversations: Conversation[] = resp.data.list.map((item) => {
+            const initConversationItems: Conversation[] = resp.data.list.map((item) => {
                 return {
                     key: item.chatId,
                     label: item.chatName,
                 }
             });
-            setConversationsItems(initConversations)
+            setConversationsItems(initConversationItems)
 
-            if (initConversations.length > 0) {
-                handleSelectedConversation(initConversations[0].key)
+            if (initConversationItems.length > 0) {
+                handleSelectedConversation(initConversationItems[0].key)
             }
         }
     }
@@ -249,9 +256,9 @@ const ChatPage = () => {
         }
     }
 
-    useEffect(() => {
+    /*useEffect(() => {
         initConversations().then()
-    }, []);
+    }, []);*/
 
 
     // 会话编辑
@@ -546,6 +553,14 @@ const ChatPage = () => {
         </Space>
     }
 
+
+    useEffect(() => {
+        if (props.defaultMessages) {
+            console.log('init Messages')
+            setMessages(props.defaultMessages)
+        }
+    }, []);
+
     useEffect(() => {
         const finalMessageItems: BubbleDataType[] = messages.length > 0
             ? messages.map((
@@ -604,7 +619,7 @@ const ChatPage = () => {
 
     useEffect(() => {
         console.log('activeConversationKey:', activeConversationKey)
-        queryMessageList(activeConversationKey)
+        queryMessageList(activeConversationKey).then()
     }, [activeConversationKey]);
 
 

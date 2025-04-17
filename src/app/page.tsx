@@ -1,9 +1,17 @@
-import Chat from "@/app/(chat)/chat/chat";
+'use client'
+
+import {useRouter} from "next/navigation";
+import {useEffect} from "react";
 
 export default function Home() {
+    const router = useRouter();
+
+    useEffect(() => {
+        router.push('/chat');
+    }, []);
+
   return (
-    <div >
-      <Chat/>
-    </div>
+    <>
+    </>
   );
 }

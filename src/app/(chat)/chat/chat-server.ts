@@ -1,7 +1,6 @@
 import {Conversation} from "@ant-design/x/es/conversations";
 import {ApiResponse, PageResult} from "@/apis";
 import {ChatRecordVO} from "@/apis/chat-api";
-import {appConfig} from "@/utils/appConfig";
 import {serverFetcher} from "@/utils/fetcher";
 
 

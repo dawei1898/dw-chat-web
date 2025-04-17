@@ -52,7 +52,7 @@ const AuthProvider = ({children}: { children: ReactNode }) => {
         const fetchUser = async () => {
             try {
                 const user = await getUserCookieAction();
-                console.log('userCookie:', JSON.stringify(user))
+                //console.log('AuthProvider useEffect Cookie:', JSON.stringify(user))
                 if (user) {
                     setUser(user)
                 }

@@ -1,8 +1,7 @@
-"use client"
+"use client";
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useCallback, useMemo} from 'react';
 import {useImmer} from 'use-immer';
-import dynamic from 'next/dynamic';
 import {
     Bubble,
     Conversations,
@@ -10,14 +9,15 @@ import {
     Sender,
     useXAgent,
     useXChat,
-    XProvider, XRequest
+    XProvider,
+    XRequest
 } from "@ant-design/x";
 import {
     Button, GetProp, Space,
     message,
     Tooltip, theme,
     ThemeConfig, Flex,
-    Modal, Input, Typography, 
+    Modal, Input, Typography,
     type AvatarProps,
 } from "antd";
 import {
@@ -27,22 +27,27 @@ import {
     NodeIndexOutlined, PaperClipOutlined,
     PlusOutlined, UpOutlined, UserOutlined
 } from "@ant-design/icons";
-import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
 import {BubbleDataType} from "@ant-design/x/es/bubble/BubbleList";
-import MarkdownRender from "@/app/(chat)/chat/markdown-render";
-import InitWelcome from "@/app/(chat)/chat/init-welcome";
-import Logo from "@/app/(chat)/chat/logo";
 import zhCN from "antd/locale/zh_CN";
-import Footer from "@/app/(chat)/chat/footer";
-import HeaderActions from "@/app/(chat)/chat/header-actions";
+import '@ant-design/v5-patch-for-react-19'; // 兼容 React19
+import {writeText} from "clipboard-polyfill";
+import {ProLayout} from "@ant-design/pro-layout";
 import type {ProTokenType} from "@ant-design/pro-provider";
 import {SiderMenuProps} from "@ant-design/pro-layout/es/components/SiderMenu/SiderMenu";
 import type {HeaderViewProps} from "@ant-design/pro-layout/es/components/Header";
-import {DeepSeekIcon, PanelLeftClose, PanelLeftOpen} from "@/components/Icons";
 import {Conversation} from "@ant-design/x/es/conversations";
-import {writeText} from "clipboard-polyfill";
-import {appConfig} from "@/utils/appConfig";
-import {ProLayout} from "@ant-design/pro-layout";
+import {MessageInfo} from "@ant-design/x/es/use-x-chat";
+
+// Local components
+import MarkdownRender from "@/app/(chat)/chat/markdown-render";
+import InitWelcome from "@/app/(chat)/chat/init-welcome";
+import Logo from "@/app/(chat)/chat/logo";
+import Footer from "@/app/(chat)/chat/footer";
+import HeaderActions from "@/app/(chat)/chat/header-actions";
+import {DeepSeekIcon, PanelLeftClose, PanelLeftOpen} from "@/components/Icons";
+import AvatarDropdown from "@/app/(chat)/chat/avatar-dropdown";
+
+// APIs
 import {
     AgentMessage,
     AIAgentMessage,
@@ -54,12 +59,13 @@ import {
     saveVoteAPI,
     StreamChatParam
 } from "@/apis/chat-api";
-import {getUserCookieAction} from "@/app/(auth)/actions";
-import {MessageInfo} from "@ant-design/x/es/use-x-chat";
+
+// Utils & Providers
+import {appConfig} from "@/utils/appConfig";
 import {useTheme} from "@/components/provider/theme-provider";
 import {useAuth} from "@/components/provider/auth-provider";
-import AvatarDropdown from "@/app/(chat)/chat/avatar-dropdown";
-import {ProLayoutProps} from "@ant-design/pro-components";
+import type {ProLayoutProps} from "@ant-design/pro-components";
+import dynamic from 'next/dynamic';
 
 
 // 动态导入
@@ -77,19 +83,22 @@ type ChatProps = {
 
 const ChatPage = (props: ChatProps) => {
     console.log('init ChatPage')
+    // Hooks and state initialization
     const [messageApi, contextHolder] = message.useMessage();
     const {token} = theme.useToken();
     const {isDark} = useTheme();
     const {user} = useAuth();
-    const [inputTxt, setInputTxt] = useState<string>('');
-    const [requestLoading, setRequestLoading] = useState<boolean>(false);
+
+    const [inputTxt, setInputTxt] = useState('');
+    const [requestLoading, setRequestLoading] = useState(false);
     const [conversationsItems, setConversationsItems] = useState(props.defaultConversationItems);
-    const [activeConversationKey, setActiveConversationKey] = useState<string>('');
-    const [openSearch, setOpenSearch] = useState<boolean>(false);
-    const [openReasoning, setOpenReasoning] = useState<boolean>(false);
-    const abortControllerRef = useRef<AbortController | null>(null);
-    const [messageItems, updateMessageItems] = useImmer<BubbleDataType[]>([])
+    const [activeConversationKey, setActiveConversationKey] = useState('');
+    const [openSearch, setOpenSearch] = useState(false);
+    const [openReasoning, setOpenReasoning] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
+    const [messageItems, updateMessageItems] = useImmer<BubbleDataType[]>([]);
+
+    const abortControllerRef = useRef<AbortController | null>(null);
 
 
     // 主题配置
@@ -113,11 +122,8 @@ const ChatPage = (props: ChatProps) => {
     }
 
     /* 侧边栏触发器 */
-    const SidebarTrigger = (
-        <Tooltip
-            title={collapsed ? '打开边栏' : '收起边栏'}
-            placement='right'
-        >
+    const SidebarTrigger = useMemo(() => (
+        <Tooltip title={collapsed ? '打开边栏' : '收起边栏'} placement='right'>
             <Button
                 styles={{icon: {color: '#676767'}}}
                 type='text'
@@ -125,7 +131,7 @@ const ChatPage = (props: ChatProps) => {
                 onClick={() => setCollapsed(!collapsed)}
             />
         </Tooltip>
-    )
+    ), [collapsed]);
 
     // 处理 logo 和标题文字的样式
     const menuHeaderRender = (logo: React.ReactNode, title: React.ReactNode, props?: SiderMenuProps) => {
@@ -361,7 +367,7 @@ const ChatPage = (props: ChatProps) => {
             return  fetch(url, {
                 ...options,
                 headers: {
-                    "Authorization": `Bearer ${(await getUserCookieAction())?.token}`,
+                    "Authorization": `Bearer ${user?.token || ''}`,
                     ...options?.headers,
                 },
                 signal: abortControllerRef.current?.signal, // 控制停止

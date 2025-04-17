@@ -1,2 +1,2 @@
 
-export const COOKIE_LOGIN_USER = 'user'
+export const COOKIE_USER = 'user'

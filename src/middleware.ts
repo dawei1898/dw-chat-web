@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import {LoginUser} from "@/apis/user-api";
-import {COOKIE_LOGIN_USER} from "@/utils/constant";
+import {COOKIE_USER} from "@/utils/constant";
 
 
 /**
@@ -15,7 +15,7 @@ const middleware = (request: NextRequest) => {
     const pathname = request.nextUrl.pathname;
 
     // 拦截 /dwc/api 请求，设置 token
-    if ((pathname.startsWith('/dwc/api/')
+    /*if ((pathname.startsWith('/dwc/api/')
             || pathname.startsWith('/dev/dwc/api/')
         )
         && !pathname.startsWith('/dwc/api/user/login')
@@ -23,7 +23,7 @@ const middleware = (request: NextRequest) => {
         && !pathname.startsWith('/dwc/api/user/register')
         && !pathname.startsWith('/dev/dwc/api/user/register')
     ) {
-        let loginUserCookie = request.cookies.get(COOKIE_LOGIN_USER)
+        let loginUserCookie = request.cookies.get(COOKIE_USER)
         //console.log('Add loginUserCookie:', loginUserCookie)
         if (loginUserCookie) {
             const loginUser: LoginUser = JSON.parse(loginUserCookie?.value);
@@ -37,7 +37,7 @@ const middleware = (request: NextRequest) => {
                 },
             })
         }
-    }
+    }*/
 
 }
 

@@ -26,9 +26,9 @@
 
 dw-chat-web-lite：纯前端版工程     Github：https://github.com/dawei1898/dw-chat-web-lite
 
-dw-chat-web-lite：前端工程        Github：https://github.com/dawei1898/dw-chat-web
+dw-chat-web：前端工程        Github：https://github.com/dawei1898/dw-chat-web
 
-dw-chat：         后端工程        Github：https://github.com/dawei1898/dw-chat
+dw-chat：后端工程        Github：https://github.com/dawei1898/dw-chat
 
 
 ### 本地启动项目

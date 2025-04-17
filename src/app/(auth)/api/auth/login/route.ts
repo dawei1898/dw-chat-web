@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const { username, password}: LoginParam = body;
 
     //const url = `http://localhost:3000/dev/dwc/api/user/login`;
-    const url = `${appConfig.apiBaseHostname}${appConfig.apiBaseUrl}/user/login`;
+    const url = `${appConfig.clientHost}${appConfig.apiBaseUrl}/user/login`;
     const options = {
         method: "POST",
         headers: {

@@ -31,12 +31,12 @@ type LoginType = 'account' | 'email';
 const LoginPage = () => {
     const {token} = theme.useToken();
     const router = useRouter();
-    const {user, login, logout, loading} = useAuth();
+    const {login} = useAuth();
     const [loginType, setLoginType] = useState<LoginType>('account');
 
-    const searchParams = useSearchParams();
-    const redirect = searchParams.get('redirect') || '/';
-    console.log('redirect:', redirect)
+    //const searchParams = useSearchParams();
+    //const redirect = searchParams.get('redirect') || '/';
+    //console.log('redirect:', redirect)
 
     const iconStyles: CSSProperties = {
         marginInlineStart: '16px',
@@ -51,29 +51,35 @@ const LoginPage = () => {
     const handleLogin = async (formData: Record<string, any>) => {
         const username: string = formData.username;
         const password: string = formData.password;
-        await login(username, password)
 
-        //const resp: ApiResponse<string> = await loginAction(username, password);
+
+        const user = await login(username, password);
         if (user) {
             message.success('登录成功')
-            console.log('登录成功后跳回之前要去的页面:', redirect)
-            router.replace(redirect);
+            console.log('登录成功')
+            router.push('/')
+            //console.log('登录成功后跳回之前要去的页面:', redirect)
+            //router.replace(redirect);
         } else {
             message.error('登录失败')
             console.log('user is null')
         }
     }
-    /*const handleLogin = async (formData: Record<string, any>) => {
+
+    //const resp: ApiResponse<string> = await loginAction(username, password);
+
+    /*const handleLogin2 = async (formData: Record<string, any>) => {
         const username: string = formData.username;
         const password: string = formData.password;
         console.log('执行成功: username: ' + username + ', password: ' + password);
         const resp = await loginAPI({username, password});
         if (resp.code === 200) {
+            console.log('登录成功')
             // 使用 cookies 存储登录信息
-            await setLoginUserCookie(username, resp.data)
+            await setUserCookieAction(username, resp.data)
             message.success('登录成功')
             // 登录成功后跳回之前要去的页面
-            router.replace(redirect);
+            router.push("/");
         } else {
             message.error(resp.message)
         }
@@ -108,9 +114,17 @@ const LoginPage = () => {
                         centered
                         activeKey={loginType}
                         onChange={(activeKey) => setLoginType(activeKey as LoginType)}
+                        items={[
+                            {
+                                key: 'account',
+                                label: '账号密码登录',
+                            },
+                            {
+                                key: 'email',
+                                label: '邮箱登录',
+                            },
+                        ]}
                     >
-                        <Tabs.TabPane key={'account'} tab={'账号密码登录'}/>
-                        <Tabs.TabPane key={'email'} tab={'邮箱登录'}/>
                     </Tabs>
                     {loginType === 'account' && (
                         <>
@@ -134,8 +148,7 @@ const LoginPage = () => {
                                 fieldProps={{
                                     size: 'large',
                                     prefix: <LockOutlined className={'prefixIcon'}/>,
-                                    strengthText:
-                                        'Password should contain numbers, letters and special characters, at least 8 characters long.',
+                                    //strengthText: 'Password should contain numbers, letters and special characters, at least 8 characters long.',
                                 }}
                                 rules={[
                                     {

@@ -18,9 +18,11 @@ const AuthLayout = (
 ) => {
 
     return (
-        <Suspense fallback={<Loading/>}>
+        <>{children}</>
+
+        /*<Suspense fallback={<Loading/>}>
             {children}
-        </Suspense>
+        </Suspense>*/
     );
 };
 

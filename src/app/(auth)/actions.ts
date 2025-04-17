@@ -1,7 +1,7 @@
 'use server';
 
 import {cookies} from 'next/headers';
-import {COOKIE_LOGIN_USER} from "@/utils/constant";
+import {COOKIE_USER} from "@/utils/constant";
 import type {ApiResponse} from "@/apis";
 import {User} from "@/components/provider/auth-provider";
 import {appConfig} from "@/utils/appConfig";
@@ -50,13 +50,13 @@ export async function loginAction(username: string, password: string) {
  */
 export async function setUserCookieAction(username: string, token: string) {
     const cookie = await cookies();
-    cookie.set(COOKIE_LOGIN_USER,
+    cookie.set(COOKIE_USER,
         JSON.stringify({username, token}),
         {
             path: '/',
-            httpOnly: true, // ❗必须为 false，客户端才能读取
+            httpOnly: false, // ❗必须为 false，客户端才能读取
             //secure: process.env.NODE_ENV === 'production', // 设置了 secure: true，只能在 https 环境下  Cookies.get 到 Cookie。
-            sameSite: 'strict', // 设置了 sameSite: 'strict'，请求是从同一站点发起的，才能 Cookies.get 到 Cookie。
+            //sameSite: 'strict', // 设置了 sameSite: 'strict'，请求是从同一站点发起的，才能 Cookies.get 到 Cookie。
             maxAge: 60 * 60 * 24 * 1 // 1 days
         }
     );
@@ -69,7 +69,7 @@ export async function setUserCookieAction(username: string, token: string) {
  */
 export async function cleanUserCookieAction() {
     const cookie = await cookies();
-    cookie.delete(COOKIE_LOGIN_USER)
+    cookie.delete(COOKIE_USER)
     console.log('清除登录用户信息')
 }
 
@@ -79,7 +79,7 @@ export async function cleanUserCookieAction() {
 export async function getUserCookieAction() {
     try {
         const cookie = await cookies();
-        const userCookie = cookie.get(COOKIE_LOGIN_USER);
+        const userCookie = cookie.get(COOKIE_USER);
         if (userCookie) {
             const user: User = JSON.parse(userCookie.value);
             console.log('获取登录用户信息')

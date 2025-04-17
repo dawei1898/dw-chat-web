@@ -106,3 +106,8 @@ npm install clipboard-polyfill
 ```shell
 npm install use-immer
 ```
+
+客户端 Cookie
+```shell
+npm install js-cookie @types/js-cookie
+```

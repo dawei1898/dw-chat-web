@@ -1,6 +1,7 @@
 import {appConfig} from "@/utils/appConfig";
 import type {ApiResponse} from "@/apis/index";
-import fetchWithAuth from "@/apis/fetch-with-auth";
+import {clientFetcher} from "@/utils/fetcher";
+
 
 /**
  * 注册参数
@@ -35,19 +36,16 @@ export interface LoginUser {
  * @param password
  */
 export const  registerAPI = async ({username, email, password}: RegisterParam) => {
-    const url = `${appConfig.apiBaseUrl}/user/register`;
+    const url = `/user/register`;
     const options = {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
         body: JSON.stringify({
             username,
             email,
             password,
         }),
     }
-    const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
+    const response: ApiResponse<string> = await clientFetcher(url, options);
     //console.log('registerAPI response:', JSON.stringify(response));
     return response;
 }
@@ -59,18 +57,15 @@ export const  registerAPI = async ({username, email, password}: RegisterParam) =
  * @param password
  */
 export const loginAPI = async ({username, password}: LoginParam) => {
-    const url = `${appConfig.apiBaseUrl}/user/login`;
+    const url = `/user/login`;
     const options = {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
         body: JSON.stringify({
             username,
             password
         }),
     }
-    const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
+    const response: ApiResponse<string> = await clientFetcher(url, options);
     //console.log('loginAPI response:', JSON.stringify(response));
     return response;
 }
@@ -80,19 +75,11 @@ export const loginAPI = async ({username, password}: LoginParam) => {
  * 退出登录 API
  */
 export const logoutAPI = async () => {
-    const url = `${appConfig.apiBaseUrl}/user/logout`;
+    const url = `/user/logout`;
     const options = {
         method: "DELETE",
-        headers: {
-            "Content-Type": "application/json",
-        },
     }
-    const response: ApiResponse<void> = await fetch(url, options).then(resp => resp.json());
-    if (response.code === 401) {
-        console.log('鉴权失败 401')
-        window.location.href = '/login'; // 统一跳转到登录页
-        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
-    }
+    const response: ApiResponse<void> = await clientFetcher(url, options);
     return response;
 }
 
@@ -101,18 +88,10 @@ export const logoutAPI = async () => {
  * 查询用户信息 API
  */
 export const queryUserAPI = async () => {
-    const url = `${appConfig.apiBaseUrl}/user/queryUser`;
+    const url = `/user/queryUser`;
     const options = {
         method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-        },
     }
-    const response: ApiResponse<string> = await fetch(url, options).then(resp => resp.json());
-    if (response.code === 401) {
-        console.log('鉴权失败 401')
-        window.location.href = '/login'; // 统一跳转到登录页
-        return Promise.reject(new Error('Unauthorized')); // 显式拒绝，防止继续处理
-    }
+    const response: ApiResponse<string> = await clientFetcher(url, options);
     return response;
 }

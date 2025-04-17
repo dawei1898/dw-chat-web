@@ -1,9 +1,12 @@
-## DW Chat (dw-chat)
+## DW Chat
 
-一个接入 DeepSeek-V3、DeepSeek-R1 大模型的极简聊天页面.
+一个接入 DeepSeek-V3、DeepSeek-R1 大模型的极简 AI 对话页面.
 
 
 演示地址：https://dw-chat-web.vercel.app
+
+效果图：
+![demo1.png](public/demo1.png)
 
 
 #### 主要技术：
@@ -17,6 +20,15 @@
 4.Ant Design X
 
 5.tailwind SCC
+
+
+### 项目结构
+
+dw-chat-web-lite：纯前端版工程     Github：https://github.com/dawei1898/dw-chat-web-lite
+
+dw-chat-web-lite：前端工程        Github：https://github.com/dawei1898/dw-chat-web
+
+dw-chat：         后端工程        Github：https://github.com/dawei1898/dw-chat
 
 
 ### 本地启动项目

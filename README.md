@@ -3,7 +3,7 @@
 一个接入 DeepSeek-V3、DeepSeek-R1 大模型的极简 AI 对话页面.
 
 
-演示地址：https://dw-chat-web.vercel.app
+演示地址：https://dw-chat-web.dw1898.top
 
 效果图：
 ![demo1.png](public/demo1.png)
@@ -19,7 +19,7 @@
 
 4.Ant Design X
 
-5.tailwind SCC
+5.tailwind css
 
 
 ### 项目结构

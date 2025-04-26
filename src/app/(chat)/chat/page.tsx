@@ -5,10 +5,10 @@ import ChatPage from "@/app/(chat)/chat/chat";
 import {fetchInitChatList} from "@/app/(chat)/chat/chat-server";
 
 const ChatHome = async () => {
-    console.log('init ChatHome')
+    console.debug('init ChatHome')
 
     const defaultConversationItems = await fetchInitChatList();
-    console.log('defaultConversationItems:', defaultConversationItems);
+    console.debug('defaultConversationItems:', defaultConversationItems);
 
     return (
          <ChatPage
